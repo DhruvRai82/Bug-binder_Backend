@@ -78,20 +78,7 @@ router.get('/history', async (req, res) => {
 });
 
 // Get Details of a Specific Run
-router.get('/run/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const found = await projectService.findTestRunById(id);
-        if (!found) {
-            return res.status(404).json({ error: 'Run not found' });
-        }
-
-        res.json({ run: found.run, logs: found.logs });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// Route /run/:id removed (Merged into /run/:runId below)
 
 // Delete a Run
 router.delete('/run/:id', async (req, res) => {
@@ -197,14 +184,28 @@ router.get('/runs/:projectId', async (req, res) => {
     }
 });
 
+// Get Details of a Specific Run
 router.get('/run/:runId', async (req, res) => {
     try {
         const { runId } = req.params;
-        const { projectId } = req.query; // Need project ID to lookup file
-        if (!projectId) return res.status(400).json({ error: 'projectId required' });
+        let projectId = req.query.projectId as string;
 
-        const run = await testRunService.getRunDetails(projectId as string, runId);
+        // If no projectId provided, try to find it globally via Firestore
+        if (!projectId) {
+            // This is useful if the frontend navigates directly to a run without context
+            const found = await projectService.findTestRunById(runId);
+            if (found) {
+                projectId = found.projectId;
+            } else {
+                // TODO: Optional: Scan local projects if not in Firestore?
+            }
+        }
+
+        if (!projectId) return res.status(404).json({ error: 'Run not found (Project ID required)' });
+
+        const run = await testRunService.getRunDetails(projectId, runId);
         if (!run) return res.status(404).json({ error: 'Run not found' });
+
         res.json(run);
     } catch (error: any) {
         console.error(`[Runner] Error in GET /run/${req.params.runId}:`, error);

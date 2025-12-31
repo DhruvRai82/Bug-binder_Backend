@@ -7,6 +7,7 @@ import { localProjectService } from './LocalProjectService';
 import { genAIService } from './GenAIService';
 import { visualTestService } from './VisualTestService';
 import { testDataService } from './TestDataService';
+import { v4 as uuidv4 } from 'uuid';
 
 interface RecordedStep {
     command: string;
@@ -509,6 +510,27 @@ export class RecorderService {
 
         if (!script) throw new Error('Script not found');
 
+        // Helper to get best selector
+        const getBestSelector = (step: any) => {
+            if (!step.targets || step.targets.length === 0) return { type: 'css', value: step.target.replace('css=', '') };
+
+            // Priority: id > name > css > xpath
+            const id = step.targets.find((t: any[]) => t[1] === 'id');
+            if (id) return { type: 'id', value: id[0].replace('id=', '') };
+
+            const name = step.targets.find((t: any[]) => t[1] === 'name');
+            if (name) return { type: 'name', value: name[0].replace('name=', '') };
+
+            // Default to target but clean it
+            let target = step.target;
+            if (target.startsWith('id=')) return { type: 'id', value: target.replace('id=', '') };
+            if (target.startsWith('name=')) return { type: 'name', value: target.replace('name=', '') };
+            if (target.startsWith('xpath=')) return { type: 'xpath', value: target.replace('xpath=', '') };
+            if (target.startsWith('css=')) return { type: 'css', value: target.replace('css=', '') };
+
+            return { type: 'css', value: target };
+        };
+
         if (format === 'side') {
             return {
                 id: script.id,
@@ -518,17 +540,24 @@ export class RecorderService {
                 tests: [{
                     id: script.id,
                     name: script.name,
-                    commands: script.steps.map((s: any) => ({
-                        id: Date.now().toString(), // Dummy ID
-                        comment: "",
-                        command: s.command,
-                        target: s.target,
-                        targets: s.targets || [],
-                        value: s.value
-                    }))
+                    commands: script.steps.map((s: any) => {
+                        // Ensure targets are in Selenium IDE format: [[value, type], [value, type]]
+                        const targets = s.targets && s.targets.length > 0
+                            ? s.targets
+                            : [[s.target, s.target.startsWith('xpath') ? 'xpath:position' : 'css:finder']];
+
+                        return {
+                            id: uuidv4(),
+                            comment: "",
+                            command: s.command,
+                            target: s.target,
+                            targets: targets,
+                            value: s.value || ""
+                        };
+                    })
                 }],
                 suites: [{
-                    id: Date.now().toString(),
+                    id: uuidv4(),
                     name: "Default Suite",
                     persistSession: false,
                     parallel: false,
@@ -539,61 +568,55 @@ export class RecorderService {
                 plugins: []
             };
         } else if (format === 'java') {
-            let code = `import org.junit.Test;\nimport org.junit.Before;\nimport org.junit.After;\nimport static org.junit.Assert.*;\nimport static org.hamcrest.CoreMatchers.is;\nimport static org.hamcrest.core.IsNot.not;\nimport org.openqa.selenium.By;\nimport org.openqa.selenium.WebDriver;\nimport org.openqa.selenium.firefox.FirefoxDriver;\nimport org.openqa.selenium.chrome.ChromeDriver;\nimport org.openqa.selenium.remote.RemoteWebDriver;\nimport org.openqa.selenium.remote.DesiredCapabilities;\nimport org.openqa.selenium.Dimension;\nimport org.openqa.selenium.WebElement;\nimport org.openqa.selenium.interactions.Actions;\nimport org.openqa.selenium.support.ui.ExpectedConditions;\nimport org.openqa.selenium.support.ui.WebDriverWait;\nimport org.openqa.selenium.JavascriptExecutor;\nimport org.openqa.selenium.Alert;\nimport org.openqa.selenium.Keys;\nimport java.util.*;\nimport java.net.MalformedURLException;\nimport java.net.URL;\n\npublic class ${script.name.replace(/[^a-zA-Z0-9]/g, '')}Test {\n  private WebDriver driver;\n  private Map<String, Object> vars;\n  JavascriptExecutor js;\n\n  @Before\n  public void setUp() {\n    driver = new ChromeDriver();\n    js = (JavascriptExecutor) driver;\n    vars = new HashMap<String, Object>();\n  }\n\n  @After\n  public void tearDown() {\n    driver.quit();\n  }\n\n  @Test\n  public void ${script.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}() {\n`;
+            const className = (script.name || 'Untitled').replace(/[^a-zA-Z0-9]/g, '');
+            let code = `import org.junit.Test;\nimport org.junit.Before;\nimport org.junit.After;\nimport static org.junit.Assert.*;\nimport static org.hamcrest.CoreMatchers.is;\nimport static org.hamcrest.core.IsNot.not;\nimport org.openqa.selenium.By;\nimport org.openqa.selenium.WebDriver;\nimport org.openqa.selenium.firefox.FirefoxDriver;\nimport org.openqa.selenium.chrome.ChromeDriver;\nimport org.openqa.selenium.remote.RemoteWebDriver;\nimport org.openqa.selenium.remote.DesiredCapabilities;\nimport org.openqa.selenium.Dimension;\nimport org.openqa.selenium.WebElement;\nimport org.openqa.selenium.interactions.Actions;\nimport org.openqa.selenium.support.ui.ExpectedConditions;\nimport org.openqa.selenium.support.ui.WebDriverWait;\nimport org.openqa.selenium.JavascriptExecutor;\nimport org.openqa.selenium.Alert;\nimport org.openqa.selenium.Keys;\nimport java.util.*;\nimport java.net.MalformedURLException;\nimport java.net.URL;\n\npublic class ${className}Test {\n  private WebDriver driver;\n  private Map<String, Object> vars;\n  JavascriptExecutor js;\n\n  @Before\n  public void setUp() {\n    driver = new ChromeDriver();\n    js = (JavascriptExecutor) driver;\n    vars = new HashMap<String, Object>();\n  }\n\n  @After\n  public void tearDown() {\n    driver.quit();\n  }\n\n  @Test\n  public void ${className.toLowerCase()}() {\n`;
 
             for (const step of script.steps) {
                 if (step.command === 'open') {
                     code += `    driver.get("${step.target}");\n`;
                 } else if (step.command === 'click') {
-                    let selector = step.target;
-                    if (selector.startsWith('id=')) selector = `By.id("${selector.replace('id=', '')}")`;
-                    else if (selector.startsWith('name=')) selector = `By.name("${selector.replace('name=', '')}")`;
-                    else if (selector.startsWith('css=')) selector = `By.cssSelector("${selector.replace('css=', '').replace(/"/g, '\\"')}")`;
-                    else if (selector.startsWith('xpath=')) selector = `By.xpath("${selector.replace('xpath=', '').replace(/"/g, '\\"')}")`;
-                    else selector = `By.cssSelector("${selector.replace(/"/g, '\\"')}")`;
+                    const sel = getBestSelector(step);
+                    let byStrategy = 'cssSelector';
+                    if (sel.type === 'id') byStrategy = 'id';
+                    else if (sel.type === 'name') byStrategy = 'name';
+                    else if (sel.type === 'xpath') byStrategy = 'xpath';
 
-                    code += `    driver.findElement(${selector}).click();\n`;
+                    code += `    driver.findElement(By.${byStrategy}("${sel.value.replace(/"/g, '\\"').replace(/\\/g, '\\\\')}")).click();\n`;
                 } else if (step.command === 'type') {
-                    let selector = step.target;
-                    if (selector.startsWith('id=')) selector = `By.id("${selector.replace('id=', '')}")`;
-                    else if (selector.startsWith('name=')) selector = `By.name("${selector.replace('name=', '')}")`;
-                    else if (selector.startsWith('css=')) selector = `By.cssSelector("${selector.replace('css=', '').replace(/"/g, '\\"')}")`;
-                    else if (selector.startsWith('xpath=')) selector = `By.xpath("${selector.replace('xpath=', '').replace(/"/g, '\\"')}")`;
-                    else selector = `By.cssSelector("${selector.replace(/"/g, '\\"')}")`;
+                    const sel = getBestSelector(step);
+                    let byStrategy = 'cssSelector';
+                    if (sel.type === 'id') byStrategy = 'id';
+                    else if (sel.type === 'name') byStrategy = 'name';
+                    else if (sel.type === 'xpath') byStrategy = 'xpath';
 
-                    code += `    driver.findElement(${selector}).sendKeys("${step.value}");\n`;
+                    code += `    driver.findElement(By.${byStrategy}("${sel.value.replace(/"/g, '\\"').replace(/\\/g, '\\\\')}")).sendKeys("${step.value}");\n`;
                 }
             }
             code += `  }\n}\n`;
             return code;
         } else if (format === 'python') {
-            let code = `import pytest\nimport time\nimport json\nfrom selenium import webdriver\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.common.action_chains import ActionChains\nfrom selenium.webdriver.support import expected_conditions\nfrom selenium.webdriver.support.wait import WebDriverWait\nfrom selenium.webdriver.common.keys import Keys\nfrom selenium.webdriver.common.desired_capabilities import DesiredCapabilities\n\nclass Test${script.name.replace(/[^a-zA-Z0-9]/g, '')}():\n  def setup_method(self, method):\n    self.driver = webdriver.Chrome()\n    self.vars = {}\n  \n  def teardown_method(self, method):\n    self.driver.quit()\n  \n  def test_${script.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}(self):\n`;
+            const className = (script.name || 'Untitled').replace(/[^a-zA-Z0-9]/g, '');
+            let code = `import pytest\nimport time\nimport json\nfrom selenium import webdriver\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.common.action_chains import ActionChains\nfrom selenium.webdriver.support import expected_conditions\nfrom selenium.webdriver.support.wait import WebDriverWait\nfrom selenium.webdriver.common.keys import Keys\nfrom selenium.webdriver.common.desired_capabilities import DesiredCapabilities\n\nclass Test${className}():\n  def setup_method(self, method):\n    self.driver = webdriver.Chrome()\n    self.vars = {}\n  \n  def teardown_method(self, method):\n    self.driver.quit()\n  \n  def test_${className.toLowerCase()}(self):\n`;
 
             for (const step of script.steps) {
                 if (step.command === 'open') {
                     code += `    self.driver.get("${step.target}")\n`;
                 } else if (step.command === 'click') {
-                    let selector = step.target;
-                    let by = "By.CSS_SELECTOR";
-                    let val = selector;
+                    const sel = getBestSelector(step);
+                    let byStrategy = "By.CSS_SELECTOR";
+                    if (sel.type === 'id') byStrategy = "By.ID";
+                    else if (sel.type === 'name') byStrategy = "By.NAME";
+                    else if (sel.type === 'xpath') byStrategy = "By.XPATH";
 
-                    if (selector.startsWith('id=')) { by = "By.ID"; val = selector.replace('id=', ''); }
-                    else if (selector.startsWith('name=')) { by = "By.NAME"; val = selector.replace('name=', ''); }
-                    else if (selector.startsWith('css=')) { by = "By.CSS_SELECTOR"; val = selector.replace('css=', ''); }
-                    else if (selector.startsWith('xpath=')) { by = "By.XPATH"; val = selector.replace('xpath=', ''); }
-
-                    code += `    self.driver.find_element(${by}, "${val.replace(/"/g, '\\"')}").click()\n`;
+                    code += `    self.driver.find_element(${byStrategy}, "${sel.value.replace(/"/g, '\\"').replace(/\\/g, '\\\\')}").click()\n`;
                 } else if (step.command === 'type') {
-                    let selector = step.target;
-                    let by = "By.CSS_SELECTOR";
-                    let val = selector;
+                    const sel = getBestSelector(step);
+                    let byStrategy = "By.CSS_SELECTOR";
+                    if (sel.type === 'id') byStrategy = "By.ID";
+                    else if (sel.type === 'name') byStrategy = "By.NAME";
+                    else if (sel.type === 'xpath') byStrategy = "By.XPATH";
 
-                    if (selector.startsWith('id=')) { by = "By.ID"; val = selector.replace('id=', ''); }
-                    else if (selector.startsWith('name=')) { by = "By.NAME"; val = selector.replace('name=', ''); }
-                    else if (selector.startsWith('css=')) { by = "By.CSS_SELECTOR"; val = selector.replace('css=', ''); }
-                    else if (selector.startsWith('xpath=')) { by = "By.XPATH"; val = selector.replace('xpath=', ''); }
-
-                    code += `    self.driver.find_element(${by}, "${val.replace(/"/g, '\\"')}").send_keys("${step.value}")\n`;
+                    code += `    self.driver.find_element(${byStrategy}, "${sel.value.replace(/"/g, '\\"').replace(/\\/g, '\\\\')}").send_keys("${step.value}")\n`;
                 }
             }
             return code;

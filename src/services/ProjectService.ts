@@ -304,16 +304,29 @@ export class ProjectService {
     // Firestore allows querying across all collections with same ID
 
     async findTestRunById(runId: string): Promise<{ run: any, logs: any[], projectId: string } | null> {
-        // Since we store logs in the run doc, we just need the run
-        // We use collectionGroup query to find the run regardless of project
-        const snapshot = await db.collectionGroup('test_runs').where('id', '==', runId).get();
-        if (snapshot.empty) return null;
+        try {
+            // Since we store logs in the run doc, we just need the run
+            // We use collectionGroup query to find the run regardless of project
+            const snapshot = await db.collectionGroup('test_runs').where('id', '==', runId).get();
+            if (snapshot.empty) return null;
 
-        const doc = snapshot.docs[0];
-        const data = doc.data();
-        const projectId = doc.ref.parent.parent!.id; // test_runs parent is project doc
+            const doc = snapshot.docs[0];
+            const data = doc.data();
 
-        return { run: { id: doc.id, ...data }, logs: data.logs || [], projectId };
+            // Safety check for parent
+            if (!doc.ref.parent.parent) {
+                console.warn(`[ProjectService] Run ${runId} has no parent project`);
+                return null;
+            }
+
+            const projectId = doc.ref.parent.parent.id;
+
+            return { run: { id: doc.id, ...data }, logs: data.logs || [], projectId };
+        } catch (error) {
+            console.error('[ProjectService] findTestRunById error:', error);
+            // Return null instead of throwing to avoid 500 if index missing or other issue
+            return null;
+        }
     }
 }
 

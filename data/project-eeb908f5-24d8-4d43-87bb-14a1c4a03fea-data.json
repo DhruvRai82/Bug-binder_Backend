@@ -1,9 +1,140 @@
 {
   "customPages": [],
   "dailyData": [],
-  "scripts": [],
+  "scripts": [
+    {
+      "name": "GeeksForGeeks",
+      "module": "Test Record",
+      "steps": [
+        {
+          "command": "open",
+          "target": "https://www.geeksforgeeks.org/",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "command": "click",
+          "target": "css=button.signinButton.gfg_loginModalBtn.login-modal-btn",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "command": "click",
+          "target": "css=button.signinButton.gfg_loginModalBtn.login-modal-btn",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "command": "click",
+          "target": "xpath=//*[@id='login']/div/div[2]/div/div[2]/div/button/span/span[2]",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "command": "type",
+          "target": "css=input.HomePageSearchContainer_homePageSearchContainer_container_input__1LS0r",
+          "targets": [],
+          "value": "Data structure"
+        },
+        {
+          "command": "click",
+          "target": "css=div.HomePageSearchContainer_homePageSearchContainer_container--results--singleResult__ij51M",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "command": "click",
+          "target": "css=h2.ResultArticle_articleContainer__headerLink___pap7",
+          "targets": [],
+          "value": ""
+        }
+      ],
+      "project_id": "eeb908f5-24d8-4d43-87bb-14a1c4a03fea",
+      "user_id": "test-user-id",
+      "id": "99068564-d919-4d86-85bb-de96801d769e",
+      "createdAt": "2025-12-31T09:57:42.833Z",
+      "updatedAt": "2025-12-31T09:57:42.833Z"
+    }
+  ],
   "reports": [],
-  "testRuns": [],
+  "testRuns": [
+    {
+      "project_id": "eeb908f5-24d8-4d43-87bb-14a1c4a03fea",
+      "script_id": "99068564-d919-4d86-85bb-de96801d769e",
+      "status": "failed",
+      "started_at": "2025-12-31T09:58:43.052Z",
+      "trigger_source": "manual",
+      "id": "286ebc9c-52e0-41af-86cd-5758e284d29c",
+      "logs": [
+        {
+          "step_index": 0,
+          "action": "start",
+          "status": "info",
+          "message": "Starting execution of GeeksForGeeks",
+          "timestamp": "2025-12-31T09:58:43.797Z"
+        },
+        {
+          "step_index": 1,
+          "action": "open",
+          "status": "info",
+          "message": "Executing: open on https://www.geeksforgeeks.org/",
+          "timestamp": "2025-12-31T09:58:43.815Z"
+        },
+        {
+          "step_index": 1,
+          "action": "open",
+          "status": "pass",
+          "message": "Step 1 passed",
+          "timestamp": "2025-12-31T09:58:45.235Z"
+        },
+        {
+          "step_index": 2,
+          "action": "click",
+          "status": "info",
+          "message": "Executing: click on css=button.signinButton.gfg_loginModalBtn.login-modal-btn",
+          "timestamp": "2025-12-31T09:58:45.239Z"
+        },
+        {
+          "step_index": 2,
+          "action": "click",
+          "status": "pass",
+          "message": "Step 2 passed",
+          "timestamp": "2025-12-31T09:58:45.636Z"
+        },
+        {
+          "step_index": 3,
+          "action": "click",
+          "status": "info",
+          "message": "Executing: click on css=button.signinButton.gfg_loginModalBtn.login-modal-btn",
+          "timestamp": "2025-12-31T09:58:45.639Z"
+        },
+        {
+          "step_index": 3,
+          "action": "heal",
+          "status": "warning",
+          "message": "Attempting self-healing for: button.signinButton.gfg_loginModalBtn.login-modal-btn",
+          "timestamp": "2025-12-31T09:58:55.666Z"
+        },
+        {
+          "step_index": 3,
+          "action": "heal",
+          "status": "fail",
+          "message": "AI could not find a fix.",
+          "timestamp": "2025-12-31T09:58:56.072Z"
+        },
+        {
+          "step_index": 3,
+          "action": "click",
+          "status": "fail",
+          "message": "Failed: page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button.signinButton.gfg_loginModalBtn.login-modal-btn')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"signinButton gfg_loginModalBtn login-modal-btn\">Sign In</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"login\" class=\"loginModal\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"login\" class=\"loginModal\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div id=\"login\" class=\"loginModal\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+          "timestamp": "2025-12-31T09:58:56.080Z"
+        }
+      ],
+      "completed_at": "2025-12-31T09:58:56.085Z",
+      "duration_ms": 13037,
+      "error_message": "page.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button.signinButton.gfg_loginModalBtn.login-modal-btn')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"signinButton gfg_loginModalBtn login-modal-btn\">Sign In</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"login\" class=\"loginModal\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"login\" class=\"loginModal\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div id=\"login\" class=\"loginModal\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    }
+  ],
   "schedules": [],
   "datasets": [],
   "files": [

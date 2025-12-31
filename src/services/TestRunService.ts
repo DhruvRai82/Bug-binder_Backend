@@ -128,11 +128,12 @@ class TestRunService {
     async getRunDetails(projectId: string, runId: string): Promise<TestRun | null> {
         try {
             const data: any = await localProjectService.readProjectData(projectId);
+
+            if (!data) return null;
+
             const run = data.testRuns?.find((r: TestRun) => r.id === runId);
 
             if (run) {
-                // Merge persistent logs with in-memory buffer for live view
-                // Defensive: Ensure logs is an array to prevent 500 on malformed data
                 const persistentLogs = Array.isArray(run.logs) ? run.logs : [];
                 const bufferedLogs = this.logBuffers.get(runId) || [];
                 return {
