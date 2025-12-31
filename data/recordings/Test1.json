@@ -1,0 +1,50 @@
+{
+  "id": "Test1",
+  "name": "Test1",
+  "module": "Login",
+  "projectId": "0032b22e-45fc-44a9-9a06-dce933195bea",
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "https://practicetestautomation.com/practice-test-login/",
+      "timestamp": 1763825764233
+    },
+    {
+      "action": "click",
+      "selector": "#username",
+      "value": "",
+      "timestamp": 1763825769909
+    },
+    {
+      "action": "type",
+      "selector": "#username",
+      "value": "student",
+      "timestamp": 1763825774657
+    },
+    {
+      "action": "click",
+      "selector": "#password",
+      "value": "",
+      "timestamp": 1763825774793
+    },
+    {
+      "action": "type",
+      "selector": "#password",
+      "value": "Password123",
+      "timestamp": 1763825780451
+    },
+    {
+      "action": "click",
+      "selector": "#submit",
+      "value": "Submit",
+      "timestamp": 1763825780573
+    },
+    {
+      "action": "click",
+      "selector": "text=\"Log out\"",
+      "value": "Log out",
+      "timestamp": 1763825785206
+    }
+  ],
+  "createdAt": "2025-11-22T15:36:46.370Z"
+}

@@ -1,0 +1,42 @@
+[
+    {
+        "id": "a1",
+        "user": "Dhruv Rai",
+        "userAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Dhruv",
+        "action": "created a new project",
+        "target": "Bug-Binder",
+        "timestamp": "2025-12-18T11:02:43.751Z"
+    },
+    {
+        "id": "a2",
+        "user": "Alice Johnson",
+        "userAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice",
+        "action": "commented on",
+        "target": "FoodChow",
+        "timestamp": "2025-12-25T09:30:00Z"
+    },
+    {
+        "id": "a3",
+        "user": "Bob Smith",
+        "userAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
+        "action": "completed task",
+        "target": "Update Documentation",
+        "timestamp": "2025-12-24T14:15:00Z"
+    },
+    {
+        "id": "a4",
+        "user": "Tester Account",
+        "userAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Tester",
+        "action": "reported bug",
+        "target": "Login Failure",
+        "timestamp": "2025-12-23T16:45:00Z"
+    },
+    {
+        "id": "a5",
+        "user": "Dhruv Rai",
+        "userAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Dhruv",
+        "action": "deployed to",
+        "target": "Production",
+        "timestamp": "2025-12-22T10:00:00Z"
+    }
+]

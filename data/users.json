@@ -1,0 +1,72 @@
+[
+  {
+    "id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
+    "firstName": "Dhruv",
+    "lastName": "Rai",
+    "username": "dhruv.rai",
+    "email": "dhruvraiyanidh@gmail.com",
+    "phone": "+1 (555) 123-4567",
+    "role": "ADMIN",
+    "status": "active",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Dhruv",
+    "verified": true,
+    "createdAt": "2023-01-01T00:00:00Z",
+    "user_metadata": {
+      "full_name": "DHRUV RAIYANI",
+      "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocJx_RTozgDelPpMDJ1NGFgw7q4TeP-URnXNUo18Tzcza0Ry1T0V=s96-c"
+    },
+    "last_seen": "2025-12-29T10:13:23.767Z"
+  },
+  {
+    "id": "u2",
+    "firstName": "Tester",
+    "lastName": "Account",
+    "username": "tester.One",
+    "email": "21bmiit087@gmail.com",
+    "phone": "+1 (555) 987-6543",
+    "role": "TESTER",
+    "status": "active",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Tester",
+    "verified": true,
+    "createdAt": "2023-02-15T10:30:00Z"
+  },
+  {
+    "id": "u3",
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "username": "alice.j",
+    "email": "alice.johnson@example.com",
+    "phone": "+1 (555) 234-5678",
+    "role": "USER",
+    "status": "inactive",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice",
+    "verified": false,
+    "createdAt": "2023-03-10T14:20:00Z"
+  },
+  {
+    "id": "u4",
+    "firstName": "Bob",
+    "lastName": "Smith",
+    "username": "bob.smith",
+    "email": "bob.smith@example.com",
+    "phone": "+1 (555) 876-5432",
+    "role": "USER",
+    "status": "suspended",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
+    "verified": true,
+    "createdAt": "2023-04-05T09:15:00Z"
+  },
+  {
+    "id": "u5",
+    "firstName": "Charlie",
+    "lastName": "Brown",
+    "username": "charlie.b",
+    "email": "charlie.brown@example.com",
+    "phone": "+1 (555) 345-6789",
+    "role": "ADMIN",
+    "status": "active",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie",
+    "verified": true,
+    "createdAt": "2023-05-20T16:45:00Z"
+  }
+]

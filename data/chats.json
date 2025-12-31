@@ -1,0 +1,44 @@
+[
+    {
+        "id": "c1",
+        "userId": "u2",
+        "messages": [
+            {
+                "id": "m1",
+                "sender": "user",
+                "text": "Hey, I found a bug in the login flow.",
+                "timestamp": "2025-12-25T10:00:00Z"
+            },
+            {
+                "id": "m2",
+                "sender": "admin",
+                "text": "Thanks for reporting. Can you provide steps to reproduce?",
+                "timestamp": "2025-12-25T10:05:00Z"
+            },
+            {
+                "id": "m3",
+                "sender": "user",
+                "text": "Sure, just click 'Login' without entering a password.",
+                "timestamp": "2025-12-25T10:10:00Z"
+            }
+        ]
+    },
+    {
+        "id": "c2",
+        "userId": "u3",
+        "messages": [
+            {
+                "id": "m4",
+                "sender": "user",
+                "text": "Is the system down?",
+                "timestamp": "2025-12-24T15:00:00Z"
+            },
+            {
+                "id": "m5",
+                "sender": "admin",
+                "text": "No, it's operational. Try clearing your cache.",
+                "timestamp": "2025-12-24T15:02:00Z"
+            }
+        ]
+    }
+]

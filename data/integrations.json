@@ -1,0 +1,44 @@
+[
+    {
+        "id": "Bitbucket",
+        "name": "Bitbucket",
+        "logo": "https://simpleicons.org/icons/bitbucket.svg",
+        "description": "Manage your git repositories with Bitbucket.",
+        "connected": false
+    },
+    {
+        "id": "Discord",
+        "name": "Discord",
+        "logo": "https://simpleicons.org/icons/discord.svg",
+        "description": "Connect your team with Discord.",
+        "connected": true
+    },
+    {
+        "id": "GitHub",
+        "name": "GitHub",
+        "logo": "https://simpleicons.org/icons/github.svg",
+        "description": "Link your GitHub repositories.",
+        "connected": true
+    },
+    {
+        "id": "Jira",
+        "name": "Jira",
+        "logo": "https://simpleicons.org/icons/jira.svg",
+        "description": "Sync issues with Jira.",
+        "connected": false
+    },
+    {
+        "id": "Slack",
+        "name": "Slack",
+        "logo": "https://simpleicons.org/icons/slack.svg",
+        "description": "Send notifications to Slack.",
+        "connected": false
+    },
+    {
+        "id": "Notion",
+        "name": "Notion",
+        "logo": "https://simpleicons.org/icons/notion.svg",
+        "description": "Sync documentation with Notion.",
+        "connected": true
+    }
+]
