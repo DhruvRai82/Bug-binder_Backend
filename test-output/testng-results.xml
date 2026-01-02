@@ -2,36 +2,34 @@
 <testng-results ignored="0" total="1" passed="0" failed="1" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-12-31T12:27:42 IST" name="Command line suite" finished-at="2025-12-31T12:28:21 IST" duration-ms="38222">
+  <suite started-at="2026-01-01T13:52:14 IST" name="Command line suite" finished-at="2026-01-01T13:52:24 IST" duration-ms="9801">
     <groups>
     </groups>
-    <test started-at="2025-12-31T12:27:42 IST" name="Command line test" finished-at="2025-12-31T12:28:21 IST" duration-ms="38222">
+    <test started-at="2026-01-01T13:52:14 IST" name="Command line test" finished-at="2026-01-01T13:52:24 IST" duration-ms="9801">
       <class name="LoginTest">
-        <test-method is-config="true" signature="setup()[pri:0, instance:LoginTest@7cbd213e]" started-at="2025-12-31T12:27:42 IST" name="setup" finished-at="2025-12-31T12:27:51 IST" duration-ms="9088" status="PASS">
+        <test-method is-config="true" signature="setup()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-01T13:52:14 IST" name="setup" finished-at="2026-01-01T13:52:21 IST" duration-ms="6676" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- setup -->
-        <test-method signature="testLoginArray()[pri:0, instance:LoginTest@7cbd213e]" started-at="2025-12-31T12:27:51 IST" name="testLoginArray" finished-at="2025-12-31T12:28:19 IST" duration-ms="27377" status="FAIL">
-          <exception class="org.openqa.selenium.ElementClickInterceptedException">
+        <test-method signature="testLoginArray()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-01T13:52:21 IST" name="testLoginArray" finished-at="2026-01-01T13:52:24 IST" duration-ms="2887" status="FAIL">
+          <exception class="org.openqa.selenium.NoSuchSessionException">
             <message>
-              <![CDATA[Element <button id="btn_logout"> is not clickable at point (43,710) because another element <iframe id="kri6gdajraek1767164298095" class="" src="about:blank"> obscures it
+              <![CDATA[WebDriver session does not exist, or is not active
 Build info: version: '4.27.0', revision: 'd6e718d'
 System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '25.0.1'
 Driver info: org.openqa.selenium.firefox.FirefoxDriver
-Command: [32e96c1a-9073-4c20-bc02-2fa9b83eb721, clickElement {id=afac65d0-02ec-43a2-a338-8514d6e82dea}]
-Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 10716, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
-Element: [[FirefoxDriver: firefox on windows (32e96c1a-9073-4c20-bc02-2fa9b83eb721)] -> id: btn_logout]
-Session ID: 32e96c1a-9073-4c20-bc02-2fa9b83eb721]]>
+Command: [9c85ba97-ce4c-48b2-9b4c-e0a44749a6df, findElement {using=id, value=txtEmailId}]
+Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 22044, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
+Session ID: 9c85ba97-ce4c-48b2-9b4c-e0a44749a6df]]>
             </message>
             <full-stacktrace>
-              <![CDATA[org.openqa.selenium.ElementClickInterceptedException: Element <button id="btn_logout"> is not clickable at point (43,710) because another element <iframe id="kri6gdajraek1767164298095" class="" src="about:blank"> obscures it
+              <![CDATA[org.openqa.selenium.NoSuchSessionException: WebDriver session does not exist, or is not active
 Build info: version: '4.27.0', revision: 'd6e718d'
 System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '25.0.1'
 Driver info: org.openqa.selenium.firefox.FirefoxDriver
-Command: [32e96c1a-9073-4c20-bc02-2fa9b83eb721, clickElement {id=afac65d0-02ec-43a2-a338-8514d6e82dea}]
-Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 10716, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
-Element: [[FirefoxDriver: firefox on windows (32e96c1a-9073-4c20-bc02-2fa9b83eb721)] -> id: btn_logout]
-Session ID: 32e96c1a-9073-4c20-bc02-2fa9b83eb721
+Command: [9c85ba97-ce4c-48b2-9b4c-e0a44749a6df, findElement {using=id, value=txtEmailId}]
+Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 22044, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
+Session ID: 9c85ba97-ce4c-48b2-9b4c-e0a44749a6df
 at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
 at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
 at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:483)
@@ -42,9 +40,14 @@ at org.openqa.selenium.remote.HttpCommandExecutor.execute(HttpCommandExecutor.ja
 at org.openqa.selenium.remote.service.DriverCommandExecutor.invokeExecute(DriverCommandExecutor.java:216)
 at org.openqa.selenium.remote.service.DriverCommandExecutor.execute(DriverCommandExecutor.java:174)
 at org.openqa.selenium.remote.RemoteWebDriver.execute(RemoteWebDriver.java:545)
-at org.openqa.selenium.remote.RemoteWebElement.execute(RemoteWebElement.java:223)
-at org.openqa.selenium.remote.RemoteWebElement.click(RemoteWebElement.java:76)
-at LoginTest.testLoginArray(LoginTest.java:86)
+at org.openqa.selenium.remote.ElementLocation$ElementFinder$2.findElement(ElementLocation.java:165)
+at org.openqa.selenium.remote.ElementLocation.findElement(ElementLocation.java:66)
+at org.openqa.selenium.remote.RemoteWebDriver.findElement(RemoteWebDriver.java:368)
+at org.openqa.selenium.remote.RemoteWebDriver.findElement(RemoteWebDriver.java:362)
+at org.openqa.selenium.support.ui.ExpectedConditions$7.apply(ExpectedConditions.java:194)
+at org.openqa.selenium.support.ui.ExpectedConditions$7.apply(ExpectedConditions.java:190)
+at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:203)
+at LoginTest.testLoginArray(LoginTest.java:63)
 at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
 at java.base/java.lang.reflect.Method.invoke(Method.java:565)
 at org.testng.internal.invokers.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:141)
@@ -72,11 +75,45 @@ at org.testng.TestNG.privateMain(TestNG.java:1430)
 at org.testng.TestNG.main(TestNG.java:1394)
 ]]>
             </full-stacktrace>
-          </exception> <!-- org.openqa.selenium.ElementClickInterceptedException -->
+          </exception> <!-- org.openqa.selenium.NoSuchSessionException -->
           <reporter-output>
           </reporter-output>
         </test-method> <!-- testLoginArray -->
-        <test-method is-config="true" signature="teardown()[pri:0, instance:LoginTest@7cbd213e]" started-at="2025-12-31T12:28:19 IST" name="teardown" finished-at="2025-12-31T12:28:21 IST" duration-ms="1671" status="PASS">
+        <test-method is-config="true" signature="teardown()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-01T13:52:24 IST" name="teardown" finished-at="2026-01-01T13:52:24 IST" duration-ms="173" status="FAIL">
+          <exception class="org.openqa.selenium.WebDriverException">
+            <message>
+              <![CDATA[Failed to decode response from marionette
+Build info: version: '4.27.0', revision: 'd6e718d'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '25.0.1'
+Driver info: org.openqa.selenium.firefox.FirefoxDriver
+Command: [9c85ba97-ce4c-48b2-9b4c-e0a44749a6df, quit {}]
+Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 22044, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
+Session ID: 9c85ba97-ce4c-48b2-9b4c-e0a44749a6df]]>
+            </message>
+            <full-stacktrace>
+              <![CDATA[org.openqa.selenium.WebDriverException: Failed to decode response from marionette
+Build info: version: '4.27.0', revision: 'd6e718d'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '25.0.1'
+Driver info: org.openqa.selenium.firefox.FirefoxDriver
+Command: [9c85ba97-ce4c-48b2-9b4c-e0a44749a6df, quit {}]
+Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 22044, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
+Session ID: 9c85ba97-ce4c-48b2-9b4c-e0a44749a6df
+at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
+at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:483)
+at org.openqa.selenium.remote.ErrorCodec.decode(ErrorCodec.java:167)
+at org.openqa.selenium.remote.codec.w3c.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:138)
+at org.openqa.selenium.remote.codec.w3c.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:50)
+at org.openqa.selenium.remote.HttpCommandExecutor.execute(HttpCommandExecutor.java:190)
+at org.openqa.selenium.remote.service.DriverCommandExecutor.invokeExecute(DriverCommandExecutor.java:216)
+at org.openqa.selenium.remote.service.DriverCommandExecutor.lambda$execute$1(DriverCommandExecutor.java:126)
+at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+at java.base/java.lang.Thread.run(Thread.java:1474)
+]]>
+            </full-stacktrace>
+          </exception> <!-- org.openqa.selenium.WebDriverException -->
           <reporter-output>
           </reporter-output>
         </test-method> <!-- teardown -->

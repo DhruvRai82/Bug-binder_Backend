@@ -1,78 +1,12 @@
 {
   "projects": [
     {
-      "id": "eeb908f5-24d8-4d43-87bb-14a1c4a03fea",
+      "id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
       "name": "Foodchow POS",
-      "description": "",
-      "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
-      "createdAt": "2025-12-29T05:56:47.401Z",
-      "updatedAt": "2025-12-29T05:56:47.401Z"
-    },
-    {
-      "id": "bef3b007-5fb3-49a4-83d5-a6d89dbc63b2",
-      "name": "Foodchow Customer App",
-      "description": "",
-      "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
-      "createdAt": "2025-12-29T06:02:56.873Z",
-      "updatedAt": "2025-12-29T06:02:56.873Z"
-    },
-    {
-      "id": "0032b22e-45fc-44a9-9a06-dce933195bea",
-      "name": "FoodChow",
-      "description": "testcases and bug",
-      "createdAt": "2025-09-07T07:38:15.052Z",
-      "updatedAt": "2025-09-09T15:44:12.197Z",
-      "status": "in progress",
-      "priority": "high",
-      "label": "bug"
-    },
-    {
-      "id": "e4c4c174-f0ea-4773-9975-d6536fb7500c",
-      "name": "test2",
-      "description": "rest",
-      "createdAt": "2025-09-09T15:44:34.015Z",
-      "updatedAt": "2025-09-09T15:44:34.015Z",
-      "status": "backlog",
-      "priority": "low",
-      "label": "documentation"
-    },
-    {
-      "id": "06cd92fe-aa7f-4ec4-8cf3-c4e8a58d02ca",
-      "name": "E-Commerce Alpha",
-      "description": "Main web store automated testing suite",
-      "user_id": "demo-user-id",
-      "createdAt": "2025-12-17T10:36:01.845Z",
-      "updatedAt": "2025-12-17T10:36:01.845Z",
-      "status": "in progress",
-      "priority": "critical",
-      "label": "feature"
-    },
-    {
-      "id": "c44fc6a8-0459-420d-b577-0e833b9a8df3",
-      "name": "Bug-Binder",
-      "description": "Test for API ",
-      "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
-      "createdAt": "2025-12-18T11:02:43.751Z",
-      "updatedAt": "2025-12-18T11:02:43.751Z",
-      "status": "todo",
-      "priority": "medium",
-      "label": "bug"
-    },
-    {
-      "id": "1db7f7e7-50d1-4cf8-a854-b2106c05fdaa",
-      "name": "Foodchow Pos",
       "description": "POS",
-      "user_id": "2a4b779b-71fa-4b88-a67f-c3b33154b22a",
-      "createdAt": "2025-12-27T11:32:42.269Z",
-      "updatedAt": "2025-12-27T11:32:42.269Z"
-    },
-    {
-      "id": "0a679d0c-4481-4f60-8b32-f9937e5b7aad",
-      "name": "Foodchow Customer App",
-      "description": "Foodchow Customer app\n",
-      "user_id": "2a4b779b-71fa-4b88-a67f-c3b33154b22a",
-      "createdAt": "2025-12-27T11:39:22.785Z",
-      "updatedAt": "2025-12-27T11:39:22.785Z"
+      "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
+      "createdAt": "2026-01-01T10:07:45.430Z",
+      "updatedAt": "2026-01-01T10:07:45.430Z"
     }
   ]
 }

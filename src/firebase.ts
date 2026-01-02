@@ -1,18 +1,5 @@
-import admin from 'firebase-admin';
-import dotenv from 'dotenv';
+// Re-export from the single source of truth
+import { auth, admin, db } from './lib/firebase-admin';
 
-dotenv.config();
-
-// Initialize Firebase Admin
-// Expects GOOGLE_APPLICATION_CREDENTIALS environment variable to be set
-// or service account credentials to be provided via other means.
-try {
-    admin.initializeApp({
-        projectId: process.env.FIREBASE_PROJECT_ID || 'bug-binder'
-    });
-    console.log('Firebase Admin initialized with projectId:', process.env.FIREBASE_PROJECT_ID || 'bug-binder');
-} catch (error) {
-    console.error('Firebase Admin initialization failed:', error);
-}
-
-export const auth = admin.auth();
+export { auth, admin, db };
+export default admin;

@@ -262,6 +262,10 @@ export class ProjectService {
         await this.collection.doc(projectId).collection('test_runs').doc(runId).update(updates);
     }
 
+    async deleteTestRun(projectId: string, runId: string): Promise<void> {
+        await this.collection.doc(projectId).collection('test_runs').doc(runId).delete();
+    }
+
     async addTestLog(projectId: string, runId: string, logEntry: any): Promise<void> {
         const docRef = this.collection.doc(projectId).collection('test_runs').doc(runId);
         const doc = await docRef.get();

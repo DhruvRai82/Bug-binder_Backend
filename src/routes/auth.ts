@@ -1,6 +1,7 @@
 import express from 'express';
 import { db } from '../lib/firebase-admin';
 import { unifiedProjectService } from '../services/UnifiedProjectService';
+import { userService } from '../services/UserService';
 
 const router = express.Router();
 
@@ -39,7 +40,11 @@ router.post('/sync', async (req, res) => {
             });
         }
 
-        console.log(`[Auth] Synced User to Firestore: ${email} (${uid})`);
+        // SYNC TO LOCAL JSON (User Service)
+        // This ensures the user exists in backend/data/users.json and assigns a role.
+        await userService.ensureUser(uid, email);
+
+        console.log(`[Auth] Synced User to Firestore & Local JSON: ${email} (${uid})`);
 
         // Trigger Auto-Sync of Local Projects to Firestore
         // This ensures if data is missing in cloud but exists locally, it gets pushed.

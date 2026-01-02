@@ -129,14 +129,13 @@
                   <a name="testLoginArray">
                   </a> <!-- testLoginArray -->
                   <span class="method-name">testLoginArray</span>
-                  <div class="stack-trace">org.openqa.selenium.ElementClickInterceptedException: Element &lt;button id=&quot;btn_logout&quot;&gt; is not clickable at point (43,710) because another element &lt;iframe id=&quot;kri6gdajraek1767164298095&quot; class=&quot;&quot; src=&quot;about:blank&quot;&gt; obscures it
+                  <div class="stack-trace">org.openqa.selenium.NoSuchSessionException: WebDriver session does not exist, or is not active
 Build info: version: &apos;4.27.0&apos;, revision: &apos;d6e718d&apos;
 System info: os.name: &apos;Windows 11&apos;, os.arch: &apos;amd64&apos;, os.version: &apos;10.0&apos;, java.version: &apos;25.0.1&apos;
 Driver info: org.openqa.selenium.firefox.FirefoxDriver
-Command: [32e96c1a-9073-4c20-bc02-2fa9b83eb721, clickElement {id=afac65d0-02ec-43a2-a338-8514d6e82dea}]
-Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 10716, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
-Element: [[FirefoxDriver: firefox on windows (32e96c1a-9073-4c20-bc02-2fa9b83eb721)] -&gt; id: btn_logout]
-Session ID: 32e96c1a-9073-4c20-bc02-2fa9b83eb721
+Command: [9c85ba97-ce4c-48b2-9b4c-e0a44749a6df, findElement {using=id, value=txtEmailId}]
+Capabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 145.0.1, moz:accessibilityChecks: false, moz:buildID: 20251118022223, moz:geckodriverVersion: 0.36.0, moz:headless: false, moz:platformVersion: 10.0, moz:processID: 22044, moz:profile: C:\Users\dhruv\AppData\Loca..., moz:shutdownTimeout: 60000, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, userAgent: Mozilla/5.0 (Windows NT 10....}
+Session ID: 9c85ba97-ce4c-48b2-9b4c-e0a44749a6df
 	at org.openqa.selenium.remote.ErrorCodec.decode(ErrorCodec.java:167)
 	at org.openqa.selenium.remote.codec.w3c.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:138)
 	at org.openqa.selenium.remote.codec.w3c.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:50)
@@ -144,9 +143,14 @@ Session ID: 32e96c1a-9073-4c20-bc02-2fa9b83eb721
 	at org.openqa.selenium.remote.service.DriverCommandExecutor.invokeExecute(DriverCommandExecutor.java:216)
 	at org.openqa.selenium.remote.service.DriverCommandExecutor.execute(DriverCommandExecutor.java:174)
 	at org.openqa.selenium.remote.RemoteWebDriver.execute(RemoteWebDriver.java:545)
-	at org.openqa.selenium.remote.RemoteWebElement.execute(RemoteWebElement.java:223)
-	at org.openqa.selenium.remote.RemoteWebElement.click(RemoteWebElement.java:76)
-	at LoginTest.testLoginArray(LoginTest.java:86)
+	at org.openqa.selenium.remote.ElementLocation$ElementFinder$2.findElement(ElementLocation.java:165)
+	at org.openqa.selenium.remote.ElementLocation.findElement(ElementLocation.java:66)
+	at org.openqa.selenium.remote.RemoteWebDriver.findElement(RemoteWebDriver.java:368)
+	at org.openqa.selenium.remote.RemoteWebDriver.findElement(RemoteWebDriver.java:362)
+	at org.openqa.selenium.support.ui.ExpectedConditions$7.apply(ExpectedConditions.java:194)
+	at org.openqa.selenium.support.ui.ExpectedConditions$7.apply(ExpectedConditions.java:190)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:203)
+	at LoginTest.testLoginArray(LoginTest.java:63)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
 ... Removed 27 stack frames
 </div> <!-- stack-trace -->
@@ -209,12 +213,12 @@ data.addRows(1);
 data.setCell(0, 0, 0)
 data.setCell(0, 1, 'testLoginArray')
 data.setCell(0, 2, 'LoginTest')
-data.setCell(0, 3, 27377);
+data.setCell(0, 3, 2887);
 window.suiteTableData['Command_line_suite']= { tableData: data, tableDiv: 'times-div-Command_line_suite'}
 return data;
 }
               </script>
-              <span class="suite-total-time">Total running time: 27 seconds</span>
+              <span class="suite-total-time">Total running time: 2 seconds</span>
               <div id="times-div-Command_line_suite">
               </div> <!-- times-div-Command_line_suite -->
             </div> <!-- times-div -->
@@ -249,11 +253,13 @@ return data;
                 <img src="failed.png">
                 </img>
                 <span class="method-name">testLoginArray</span>
-                <span class="method-start">9105 ms</span>
+                <span class="method-start">6700 ms</span>
               </div> <!-- test-method -->
               <div class="configuration-class after">
+                <img src="failed.png">
+                </img>
                 <span class="method-name">teardown</span>
-                <span class="method-start">36487 ms</span>
+                <span class="method-start">9591 ms</span>
               </div> <!-- configuration-class after -->
           </div> <!-- main-panel-content rounded-window-bottom -->
         </div> <!-- panel -->

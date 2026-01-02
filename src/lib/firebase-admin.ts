@@ -22,4 +22,5 @@ try {
     process.exit(1);
 }
 
+export const auth = admin.auth();
 export { admin, db };

@@ -36,6 +36,25 @@ export class LocalProjectService {
         } catch {
             await fs.mkdir(DATA_DIR, { recursive: true });
         }
+        // Also ensure projects directory
+        const projectsDir = path.join(DATA_DIR, 'projects');
+        try {
+            await fs.access(projectsDir);
+        } catch {
+            await fs.mkdir(projectsDir, { recursive: true });
+        }
+    }
+
+    // Helper: Short ID Generator (10 chars, URL-safe)
+    private generateShortId(): string {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        const randomValues = new Uint32Array(10);
+        crypto.getRandomValues(randomValues);
+        for (let i = 0; i < 10; i++) {
+            result += chars[randomValues[i] % chars.length];
+        }
+        return result;
     }
 
     private async readProjectsFile(): Promise<{ projects: Project[] }> {
@@ -56,8 +75,12 @@ export class LocalProjectService {
         await fs.writeFile(PROJECTS_FILE, JSON.stringify(data, null, 2));
     }
 
+    private getProjectDir(projectId: string): string {
+        return path.join(DATA_DIR, 'projects', projectId);
+    }
+
     private getProjectDataFilePath(projectId: string): string {
-        return path.join(DATA_DIR, `project-${projectId}-data.json`);
+        return path.join(this.getProjectDir(projectId), 'data.json');
     }
 
     private locks = new Map<string, Promise<void>>();
@@ -103,28 +126,49 @@ export class LocalProjectService {
     }
 
     public async readProjectData(projectId: string): Promise<ProjectData> {
-        // We probably don't need to lock READS against READS, but we need to lock READs against WRITES.
-        // If we use runExclusive for everything, it's safe but slower.
-        // Given this is local file IO, safety > speed.
         return this.runExclusive(projectId, async () => {
             const filePath = this.getProjectDataFilePath(projectId);
             try {
                 const data = await fs.readFile(filePath, 'utf-8');
+                if (!data || data.trim() === '') {
+                    return this.getEmptyProjectData();
+                }
                 return JSON.parse(data);
             } catch (error) {
                 if ((error as any).code === 'ENOENT') {
-                    return { customPages: [], dailyData: [], scripts: [], reports: [], testRuns: [], schedules: [], datasets: [], files: [], apiCollections: [] };
+                    return this.getEmptyProjectData();
                 }
-                throw error;
+                // Log and return empty if JSON corrupted to prevent 500
+                console.error(`[LocalProject] Corrupt JSON for ${projectId}:`, error);
+                return this.getEmptyProjectData();
             }
         });
     }
 
+    private getEmptyProjectData(): ProjectData {
+        return { customPages: [], dailyData: [], scripts: [], reports: [], testRuns: [], schedules: [], datasets: [], files: [], apiCollections: [] };
+    }
+
     // Direct write - unsafe if not part of a transaction, but we lock it anyway.
+    // STAGE 2: Atomic Writes to prevent corruption
     public async writeProjectData(projectId: string, data: ProjectData) {
         return this.runExclusive(projectId, async () => {
+            const projectDir = this.getProjectDir(projectId);
+            // Ensure project directory exists
+            try { await fs.access(projectDir); } catch { await fs.mkdir(projectDir, { recursive: true }); }
+
             const filePath = this.getProjectDataFilePath(projectId);
-            await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+            const tempPath = `${filePath}.${this.generateShortId()}.tmp`;
+
+            try {
+                await fs.writeFile(tempPath, JSON.stringify(data, null, 2));
+                await fs.rename(tempPath, filePath);
+            } catch (error) {
+                console.error(`[LocalProject] Atomic Write Failed for ${projectId}`, error);
+                // Try to clean up temp
+                try { await fs.unlink(tempPath); } catch { }
+                throw error;
+            }
         });
     }
 
@@ -138,7 +182,7 @@ export class LocalProjectService {
                 data = JSON.parse(content);
             } catch (error) {
                 if ((error as any).code === 'ENOENT') {
-                    data = { customPages: [], dailyData: [], scripts: [], reports: [], testRuns: [], schedules: [], datasets: [], files: [], apiCollections: [] };
+                    data = this.getEmptyProjectData();
                 } else {
                     throw error;
                 }
@@ -146,36 +190,55 @@ export class LocalProjectService {
 
             await updater(data);
 
-            await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+            const projectDir = this.getProjectDir(projectId);
+            try { await fs.access(projectDir); } catch { await fs.mkdir(projectDir, { recursive: true }); }
+
+            // Re-implement atomic write logic here directly.
+            const tempPath = `${filePath}.${this.generateShortId()}.tmp`;
+            try {
+                await fs.writeFile(tempPath, JSON.stringify(data, null, 2));
+                await fs.rename(tempPath, filePath);
+            } catch (error) {
+                console.error(`[LocalProject] Atomic Update Failed for ${projectId}`, error);
+                try { await fs.unlink(tempPath); } catch { }
+                throw error;
+            }
         });
     }
 
 
     async getAllProjects(userId: string): Promise<Project[]> {
         const data = await this.readProjectsFile();
-        return data.projects
-            .filter(p => p.user_id === userId)
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        // Strict Scoping: Only return projects for this user!
+        const userProjects = data.projects.filter(p => p.user_id === userId);
+        console.log(`[LocalProject] getAllProjects for ${userId}. Total: ${userProjects.length} (Global: ${data.projects.length})`);
+
+        return userProjects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     }
 
     async getProjectById(id: string, userId: string): Promise<Project | null> {
         const data = await this.readProjectsFile();
         const project = data.projects.find(p => p.id === id);
-        if (!project || project.user_id !== userId) return null;
+
+        // Strict Scoping Check
+        if (!project) return null;
+        if (project.user_id !== userId) {
+            console.warn(`[LocalProject] Unauthorized access attempt: User ${userId} tried to access Project ${id} (Owner: ${project.user_id})`);
+            return null; // Equivalent to 403/404
+        }
         return project;
     }
 
     async createProject(name: string, description: string, userId: string, id?: string): Promise<Project> {
         const data = await this.readProjectsFile();
 
-        // Prevent Duplicates: Check if ID exists (if provided) OR if Name exists for this user
-        // Note: Name uniqueness is optional but good for user experience. 
-        // Strict check: ID uniqueness.
+        const newId = id || this.generateShortId();
 
-        const newId = id || crypto.randomUUID();
-        if (data.projects.some(p => p.id === newId)) {
-            // Already exists, return existing (Idempotent)
-            return data.projects.find(p => p.id === newId)!;
+        // Idempotency check
+        const existing = data.projects.find(p => p.id === newId);
+        if (existing) {
+            if (existing.user_id !== userId) throw new Error('ID Collision with another user project');
+            return existing;
         }
 
         const newProject: Project = {
@@ -189,8 +252,8 @@ export class LocalProjectService {
         data.projects.push(newProject);
         await this.writeProjectsFile(data);
 
-        // Initialize empty data file
-        await this.writeProjectData(newProject.id, { customPages: [], dailyData: [], scripts: [], reports: [], testRuns: [], schedules: [], datasets: [], files: [], apiCollections: [] });
+        // Initialize empty data file in new directory structure
+        await this.writeProjectData(newProject.id, this.getEmptyProjectData());
 
         return newProject;
     }
@@ -240,16 +303,13 @@ export class LocalProjectService {
 
     async createProjectPage(projectId: string, pageData: any, userId: string): Promise<any> {
         const data = await this.readProjectData(projectId);
-        const pageId = pageData.id || crypto.randomUUID();
+        const pageId = pageData.id || this.generateShortId();
 
         // Prevent Duplicates: Check if Page ID exists
         const existingPage = data.customPages.find(p => p.id === pageId);
         if (existingPage) {
             return existingPage;
         }
-
-        // Also considering checking Name uniqueness to avoid "Sprint 1", "Sprint 1"...?
-        // But user might want duplicate names. I will stick to ID uniqueness.
 
         const newPage = { ...pageData, id: pageId };
         data.customPages.push(newPage);
@@ -373,7 +433,7 @@ export class LocalProjectService {
 
     async addReport(projectId: string, reportData: any, userId: string): Promise<any> {
         const data = await this.readProjectData(projectId);
-        const reportId = reportData.id || crypto.randomUUID();
+        const reportId = reportData.id || this.generateShortId();
 
         const newReport = {
             ...reportData,
@@ -403,7 +463,7 @@ export class LocalProjectService {
 
         const newRun = {
             ...runData,
-            id: runData.id || crypto.randomUUID(),
+            id: runData.id || this.generateShortId(),
             logs: [] // Embed logs directly
         };
         data.testRuns.push(newRun);
@@ -443,7 +503,7 @@ export class LocalProjectService {
 
     async createScript(projectId: string, scriptData: any, userId: string): Promise<any> {
         const data = await this.readProjectData(projectId);
-        const scriptId = scriptData.id || crypto.randomUUID();
+        const scriptId = scriptData.id || this.generateShortId();
 
         const newScript = {
             ...scriptData,
@@ -536,7 +596,7 @@ export class LocalProjectService {
 
     async createSchedule(projectId: string, scheduleData: any, userId: string): Promise<any> {
         const data = await this.readProjectData(projectId);
-        const scheduleId = scheduleData.id || crypto.randomUUID();
+        const scheduleId = scheduleData.id || this.generateShortId();
 
         const newSchedule = {
             ...scheduleData,
@@ -571,7 +631,7 @@ export class LocalProjectService {
 
         const newDataset = {
             ...dataset,
-            id: dataset.id || crypto.randomUUID(),
+            id: dataset.id || this.generateShortId(),
             created_at: new Date().toISOString()
         };
         data.datasets.push(newDataset);
@@ -606,7 +666,7 @@ export class LocalProjectService {
         } else {
             const newNode = {
                 ...node,
-                id: node.id || crypto.randomUUID(),
+                id: node.id || this.generateShortId(),
                 created_at: new Date().toISOString()
             };
             data.files.push(newNode);
@@ -625,7 +685,7 @@ export class LocalProjectService {
         data.files = nodes.map(n => ({
             ...n,
             // Ensure ID exists
-            id: n.id || crypto.randomUUID()
+            id: n.id || this.generateShortId()
         }));
         console.log(`[LocalProject] Healed ${projectId} with ${nodes.length} remote nodes.`);
         await this.writeProjectData(projectId, data);
@@ -659,7 +719,7 @@ export class LocalProjectService {
         } else {
             const newCollection = {
                 ...collection,
-                id: collection.id || crypto.randomUUID(),
+                id: collection.id || this.generateShortId(),
                 created_at: new Date().toISOString(),
                 requests: [] // initialize requests array
             };
@@ -680,19 +740,16 @@ export class LocalProjectService {
     async rescanFiles(projectId: string): Promise<any[]> {
         const data = await this.readProjectData(projectId);
 
-        // Scan "tests" directory in backend root (or project root?)
-        // Assuming tests are in `tests/` folder in backend root (as seen in package.json/runner)
+        // Scan "tests" directory in backend root
         const testsDir = path.join(process.cwd(), 'tests');
-
         const files: any[] = [];
 
         // Helper to recursively scan
-        async function scan(dir: string, parentId: string | null = null) {
+        const scan = async (dir: string, parentId: string | null = null) => {
             let entries: Dirent[];
             try {
                 entries = await fs.readdir(dir, { withFileTypes: true });
             } catch (e) {
-                // If tests dir doesn't exist, create it
                 if (parentId === null) {
                     await fs.mkdir(dir, { recursive: true });
                     entries = [];
@@ -703,21 +760,11 @@ export class LocalProjectService {
 
             for (const entry of entries) {
                 const fullPath = path.join(dir, entry.name);
-                const relativePath = path.relative(path.join(process.cwd(), 'tests'), fullPath);
-
-                // Generate a stable ID based on path (to avoid dupes on rescan)
-                // Simple hash or just use path as ID? better to use UUID but consistent.
-                // Let's use name-based UUID? Or simpler: path string as ID?
-                // existing system uses properties: id, name, type, parent_id.
-                // We need to map existing IDs if possible, or wipe and recreate?
-                // Wipe and recreate is safer for "Rescan".
-
                 const type = entry.isDirectory() ? 'folder' : 'file';
-                // Only include .ts, .js, .java, .py
                 if (type === 'file' && !entry.name.match(/\.(ts|js|java|py)$/)) continue;
 
                 const node = {
-                    id: crypto.randomUUID(), // New ID every scan? Ideally stable... but for now OK.
+                    id: this.generateShortId(),
                     name: entry.name,
                     type,
                     parent_id: parentId,
@@ -731,11 +778,10 @@ export class LocalProjectService {
                     await scan(fullPath, node.id);
                 }
             }
-        }
+        };
 
         await scan(testsDir);
 
-        // Update data
         data.files = files;
         await this.writeProjectData(projectId, data);
         console.log(`[LocalProject] Rescanned ${files.length} files for project ${projectId}`);

@@ -56,14 +56,22 @@ router.get('/history', async (req, res) => {
         const { projectId } = req.query;
         if (!projectId) return res.status(400).json({ error: 'Project ID required' });
 
-        const runs = await projectService.getTestRuns(projectId as string); // Changed to projectService
-        runs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const { localProjectService } = await import('../services/LocalProjectService');
+        // Use TestRunService (Local) to ensure we see the runs we just executed locally
+        // Previous: projectService.getTestRuns (Remote) - caused sync misalignment
+        const runs = await testRunService.getProjectRuns(projectId as string);
+
+        runs.sort((a, b) => {
+            const timeA = new Date((a as any).started_at || (a as any).created_at || (a as any).startTime || 0).getTime();
+            const timeB = new Date((b as any).started_at || (b as any).created_at || (b as any).startTime || 0).getTime();
+            return timeB - timeA;
+        });
 
         // Fetch Script Names manually
-        // We can optimize this by fetching all scripts once
-        const scripts = await projectService.getScripts(projectId as string, 'test-user-id'); // Changed to projectService
+        const scripts = await localProjectService.getScripts(projectId as string, 'test-user-id');
 
         const runsWithNames = runs.map(run => {
+            // @ts-ignore
             const script = scripts.find(s => s.id === run.script_id);
             return {
                 ...run,
@@ -186,29 +194,66 @@ router.get('/runs/:projectId', async (req, res) => {
 
 // Get Details of a Specific Run
 router.get('/run/:runId', async (req, res) => {
+    console.log(`[Runner] GET /run/${req.params.runId} initiated`);
     try {
         const { runId } = req.params;
         let projectId = req.query.projectId as string;
+        let firestoreRun: any = null;
 
-        // If no projectId provided, try to find it globally via Firestore
+        // If no projectId provided, try to find it globally via Firestore OR Local
         if (!projectId) {
-            // This is useful if the frontend navigates directly to a run without context
-            const found = await projectService.findTestRunById(runId);
-            if (found) {
-                projectId = found.projectId;
+            console.log(`[Runner] Lookup projectId for run ${runId}...`);
+
+            // 1. Try Local First (Fastest)
+            // Dynamic import to avoid circular dep issues if any, though likely fine here
+            const { localProjectService } = await import('../services/LocalProjectService');
+            const localFound = await localProjectService.findTestRunById(runId);
+
+            if (localFound) {
+                projectId = localFound.projectId;
+                console.log(`[Runner] Found projectId: ${projectId} locally`);
             } else {
-                // TODO: Optional: Scan local projects if not in Firestore?
+                // 2. Try Firestore
+                const found = await projectService.findTestRunById(runId);
+                if (found) {
+                    projectId = found.projectId;
+                    firestoreRun = found; // Cache it
+                    console.log(`[Runner] Found projectId: ${projectId} in Firestore`);
+                } else {
+                    console.log(`[Runner] ProjectId lookup failed for ${runId}`);
+                }
             }
         }
 
-        if (!projectId) return res.status(404).json({ error: 'Run not found (Project ID required)' });
+        if (!projectId) {
+            console.warn(`[Runner] 404 - Run not found (No Project ID)`);
+            return res.status(404).json({ error: 'Run not found (Project ID required)' });
+        }
 
-        const run = await testRunService.getRunDetails(projectId, runId);
-        if (!run) return res.status(404).json({ error: 'Run not found' });
+        console.log(`[Runner] Fetching details from TestRunService (Local)...`);
+        let run = await testRunService.getRunDetails(projectId, runId);
 
+        if (!run) {
+            console.warn(`[Runner] Local details null. Checking Firestore fallback...`);
+
+            // If we didn't already fetch it, fetch it now
+            if (!firestoreRun) {
+                firestoreRun = await projectService.findTestRunById(runId);
+            }
+
+            if (firestoreRun) {
+                console.log(`[Runner] Found in Firestore. Returning Firestore data.`);
+                run = { ...firestoreRun.run, logs: firestoreRun.logs };
+            } else {
+                console.warn(`[Runner] 404 - Run not found in Local OR Firestore`);
+                return res.status(404).json({ error: 'Run not found' });
+            }
+        }
+
+        console.log(`[Runner] Success, returning run.`);
         res.json(run);
     } catch (error: any) {
-        console.error(`[Runner] Error in GET /run/${req.params.runId}:`, error);
+        console.error(`[Runner] CRITICAL Error in GET /run/${req.params.runId}:`, error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -216,12 +261,42 @@ router.get('/run/:runId', async (req, res) => {
 router.delete('/run/:runId', async (req, res) => {
     try {
         const { runId } = req.params;
-        const { projectId } = req.query;
-        if (!projectId) return res.status(400).json({ error: 'projectId required' });
+        let { projectId } = req.query;
 
-        await testRunService.deleteRun(projectId as string, runId);
+        // Auto-lookup if missing (Robustness Fix)
+        if (!projectId) {
+            console.log(`[Runner] DELETE ${runId}: No Project ID provided, searching globally...`);
+            const found = await projectService.findTestRunById(runId);
+            if (found) {
+                projectId = found.projectId;
+                console.log(`[Runner] Found run in Project: ${projectId}`);
+            }
+        }
+
+        if (!projectId) {
+            console.warn(`[Runner] DELETE ${runId} Failed: Could not resolve Project ID.`);
+            return res.status(404).json({ error: 'Run not found (Could not determine Project ID)' });
+        }
+
+        const pId = projectId as string;
+
+        console.log(`[Runner] Deleting run ${runId} from Project ${pId}...`);
+
+        // 1. Delete from Local Storage (Project Data)
+        await testRunService.deleteRun(pId, runId);
+
+        // 2. Delete from Firestore (Source of Truth) to prevent Zombies
+        try {
+            await projectService.deleteTestRun(pId, runId);
+            console.log(`[Runner] Deleted ${runId} from Firestore.`);
+        } catch (e: any) {
+            console.error(`[Runner] Failed to delete from Firestore (Zombie risk):`, e);
+            // Don't fail the request, but warn.
+        }
+
         res.json({ status: 'deleted' });
     } catch (error: any) {
+        console.error(`[Runner] Delete Error:`, error);
         res.status(500).json({ error: error.message });
     }
 });
