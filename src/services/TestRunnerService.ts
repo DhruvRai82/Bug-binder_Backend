@@ -113,7 +113,7 @@ export class TestRunnerService {
                 try {
                     await this.logStep(projectId, runId, 998, 'visual', 'info', 'Performing Visual Regression Check...');
                     const screenshotBuffer = await page!.screenshot({ fullPage: true });
-                    const visualResult = await visualTestService.compare(script.id, screenshotBuffer);
+                    const visualResult = await visualTestService.compare(script.id, screenshotBuffer, projectId);
 
                     if (visualResult.hasBaseline && visualResult.diffPercentage > 0) {
                         await this.logStep(projectId, runId, 998, 'visual', 'warning', `Visual Mismatch: ${visualResult.diffPercentage.toFixed(2)}%`);

@@ -17,9 +17,27 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Preview route - duplicate of get data for now, could be optimized later to just return head
+router.get('/:id/preview', async (req, res) => {
+    try {
+        const { projectId } = req.query;
+        // if (!projectId) return res.status(400).json({ error: 'Project ID required' }); // Make robust
+        const data = await testDataService.getData(req.params.id, projectId as string);
+        // optimization: if array, return first 5 items
+        if (Array.isArray(data)) {
+            res.json(data.slice(0, 5));
+        } else {
+            res.json(data);
+        }
+    } catch (error) {
+        res.status(404).json({ error: (error as Error).message });
+    }
+});
+
 router.get('/:id', async (req, res) => {
     try {
-        const data = await testDataService.getData(req.params.id);
+        const { projectId } = req.query;
+        const data = await testDataService.getData(req.params.id, projectId as string);
         res.json(data);
     } catch (error) {
         res.status(404).json({ error: (error as Error).message });
@@ -49,7 +67,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     try {
-        await testDataService.deleteDataset(req.params.id);
+        const { projectId } = req.query;
+        await testDataService.deleteDataset(req.params.id, projectId as string);
         res.json({ status: 'deleted' });
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });

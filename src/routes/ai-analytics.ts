@@ -43,7 +43,7 @@ router.post('/visual/approve', authMiddleware, async (req, res) => {
         // Real logic: We need to overwrite the baseline image in storage.
         // Since we are mocking storage with FS in VisualTestService, we need a method there.
 
-        const { visualTestService } = await import('../services/VisualTestService');
+        const { visualTestService } = await import('../services/VisualTestService.js');
         await visualTestService.approveBaseline(scriptId, runId);
 
         res.json({ success: true, message: 'Baseline updated' });

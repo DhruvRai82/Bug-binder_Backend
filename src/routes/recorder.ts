@@ -85,7 +85,9 @@ recorderRoutes.delete('/reports/:id', async (req, res) => {
 recorderRoutes.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        await recorderService.deleteScript(id);
+        const { projectId } = req.query;
+        if (!projectId) return res.status(400).json({ error: 'Project ID is required' });
+        await recorderService.deleteScript(id, projectId as string);
         res.json({ status: 'deleted' });
     } catch (error: any) {
         res.status(500).json({ error: error.message });

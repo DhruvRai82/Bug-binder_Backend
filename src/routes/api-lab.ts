@@ -26,6 +26,17 @@ router.get('/collections', async (req, res) => {
     }
 });
 
+router.get('/collections/:id/requests', async (req, res) => {
+    try {
+        const { projectId } = req.query;
+        if (!projectId) return res.status(400).json({ error: "Project ID required" });
+        const data = await apiLabService.getCollectionRequests(req.params.id, projectId as string);
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
 router.post('/collections', async (req, res) => {
     try {
         const { name, projectId } = req.body;

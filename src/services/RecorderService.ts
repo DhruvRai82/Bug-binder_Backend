@@ -283,11 +283,13 @@ export class RecorderService {
         console.warn('updateScriptSteps: Requires Project ID for Local Storage. Skipping persistence for now.');
     }
 
-    async deleteScript(scriptId: string, userId?: string) {
-        // Requires Project ID.
-        // FIXME: Route needs to pass project ID.
-        // For now, return success to not block UI.
-        console.warn('deleteScript: Requires Project ID. Skipping.');
+    async deleteScript(scriptId: string, projectId: string) {
+        if (!projectId) throw new Error('Project ID required for deletion');
+
+        // Delete from Local Project Service
+        // We use a dummy userId for now as local service trusts projectId access in this mode
+        await localProjectService.deleteScript(projectId, scriptId, 'user-id');
+        console.log(`[Recorder] Deleted script ${scriptId} from project ${projectId}`);
         return { status: 'deleted' };
     }
 
@@ -430,7 +432,7 @@ export class RecorderService {
             // --- VISUAL REGRESSION CHECK ---
             log('[Visual] 📸 Capturing screenshot for Visual Check...');
             const screenshotBuffer = await page.screenshot({ fullPage: true });
-            const visualResult = await visualTestService.compare(script.id, screenshotBuffer);
+            const visualResult = await visualTestService.compare(script.id, screenshotBuffer, script.projectId);
 
             let finalStatus: 'pass' | 'fail' = 'pass';
             if (visualResult.hasBaseline && visualResult.diffPercentage > 0) {

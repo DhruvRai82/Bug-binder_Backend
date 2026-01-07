@@ -9,12 +9,12 @@ const router = Router();
 router.use(authMiddleware);
 
 // Create Test
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { name, targetUrl, projectId } = req.body;
         if (!name || !targetUrl || !projectId) return res.status(400).json({ error: 'Missing fields' });
 
-        const test = visualTestService.create(projectId, name, targetUrl);
+        const test = await visualTestService.create(projectId, name, targetUrl);
         res.json(test);
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });
@@ -22,12 +22,12 @@ router.post('/', (req, res) => {
 });
 
 // List Tests
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const { projectId } = req.query;
         if (!projectId) return res.status(400).json({ error: 'Project ID required' });
 
-        const tests = visualTestService.getAll(projectId as string);
+        const tests = await visualTestService.getAll(projectId as string);
         res.json(tests);
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });
@@ -37,7 +37,10 @@ router.get('/', (req, res) => {
 // Run Test
 router.post('/:testId/run', async (req, res) => {
     try {
-        const result = await visualTestService.runTest(req.params.testId);
+        const { projectId } = req.body;
+        if (!projectId) return res.status(400).json({ error: 'Project ID required' });
+
+        const result = await visualTestService.runTest(req.params.testId, projectId);
         res.json(result);
     } catch (error) {
         console.error("Run Error:", error);
@@ -46,9 +49,12 @@ router.post('/:testId/run', async (req, res) => {
 });
 
 // Delete Test
-router.delete('/:testId', (req, res) => {
+router.delete('/:testId', async (req, res) => {
     try {
-        visualTestService.delete(req.params.testId);
+        const { projectId } = req.query;
+        if (!projectId) return res.status(400).json({ error: 'Project ID required' });
+
+        await visualTestService.delete(req.params.testId, projectId as string);
         res.json({ status: 'deleted' });
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });
@@ -56,9 +62,12 @@ router.delete('/:testId', (req, res) => {
 });
 
 // Approve Latest
-router.post('/:testId/approve', (req, res) => {
+router.post('/:testId/approve', async (req, res) => {
     try {
-        visualTestService.approve(req.params.testId);
+        const { projectId } = req.body;
+        if (!projectId) return res.status(400).json({ error: 'Project ID required' });
+
+        await visualTestService.approve(req.params.testId, projectId);
         res.json({ status: 'approved' });
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });

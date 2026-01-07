@@ -4,18 +4,18 @@ import { chromium } from 'playwright';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import { v4 as uuidv4 } from 'uuid';
+import { localProjectService } from './LocalProjectService';
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const IMAGES_DIR = path.join(DATA_DIR, 'visual_images');
-const METADATA_FILE = path.join(DATA_DIR, 'visual_tests.json');
+// METADATA_FILE is removed as we use LocalProjectService
 
 // Ensure directories exist
 if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
-if (!fs.existsSync(METADATA_FILE)) fs.writeFileSync(METADATA_FILE, JSON.stringify([]));
 
 export interface VisualTest {
     id: string;
-    projectId: string;
+    projectId: string; // Required now
     name: string;
     target_url: string;
     createdAt: string;
@@ -26,14 +26,12 @@ export interface VisualTest {
 
 export class VisualTestService {
 
-    // CRUD Operations for Metadata
-    getAll(projectId: string): VisualTest[] {
-        const all = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf-8'));
-        return all.filter((t: VisualTest) => t.projectId === projectId);
+    // CRUD Operations for Metadata via LocalProjectService
+    async getAll(projectId: string): Promise<VisualTest[]> {
+        return await localProjectService.getVisualTests(projectId);
     }
 
-    create(projectId: string, name: string, targetUrl: string): VisualTest {
-        const all = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf-8'));
+    async create(projectId: string, name: string, targetUrl: string): Promise<VisualTest> {
         const newTest: VisualTest = {
             id: uuidv4(),
             projectId,
@@ -42,15 +40,11 @@ export class VisualTestService {
             createdAt: new Date().toISOString(),
             status: 'new'
         };
-        all.push(newTest);
-        fs.writeFileSync(METADATA_FILE, JSON.stringify(all, null, 2));
-        return newTest;
+        return await localProjectService.saveVisualTest(projectId, newTest);
     }
 
-    delete(id: string) {
-        let all = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf-8'));
-        all = all.filter((t: VisualTest) => t.id !== id);
-        fs.writeFileSync(METADATA_FILE, JSON.stringify(all, null, 2));
+    async delete(id: string, projectId: string) {
+        await localProjectService.deleteVisualTest(projectId, id);
 
         // Cleanup images
         const testDir = path.join(IMAGES_DIR, id);
@@ -58,12 +52,11 @@ export class VisualTestService {
     }
 
     // Core Logic: Run and Compare
-    async runTest(id: string): Promise<{ diffPercentage: number; status: string }> {
-        const all = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf-8'));
-        const testIndex = all.findIndex((t: VisualTest) => t.id === id);
-        if (testIndex === -1) throw new Error('Test not found');
+    async runTest(id: string, projectId: string): Promise<{ diffPercentage: number; status: string }> {
+        const all = await this.getAll(projectId);
+        const test = all.find(t => t.id === id);
+        if (!test) throw new Error('Visual Test not found');
 
-        const test = all[testIndex];
         const testDir = path.join(IMAGES_DIR, id);
         if (!fs.existsSync(testDir)) fs.mkdirSync(testDir, { recursive: true });
 
@@ -74,8 +67,7 @@ export class VisualTestService {
         console.log(`[VisualTest] Launching browser for: ${test.target_url}`);
 
         // 1. Capture Screenshot
-        console.log(`[VisualTest] Launching browser for: ${test.target_url}`);
-        const browser = await chromium.launch({ headless: false });
+        const browser = await chromium.launch({ headless: false }); // Keeping headless: false as per user preference
         try {
             const page = await browser.newPage();
             await page.setViewportSize({ width: 1280, height: 720 });
@@ -107,16 +99,19 @@ export class VisualTestService {
         }
 
         // 3. Update Result
-        all[testIndex].lastRun = new Date().toISOString();
-        all[testIndex].diffPercentage = diffPercentage;
-        all[testIndex].status = status;
-        fs.writeFileSync(METADATA_FILE, JSON.stringify(all, null, 2));
+        const updatedTest = {
+            ...test,
+            lastRun: new Date().toISOString(),
+            diffPercentage,
+            status
+        };
+        await localProjectService.saveVisualTest(projectId, updatedTest);
 
         return { diffPercentage, status };
     }
 
     // Compare Buffer (Used by RecorderService)
-    async compare(id: string, screenshotBuffer: Buffer): Promise<{ hasBaseline: boolean, diffPercentage: number }> {
+    async compare(id: string, screenshotBuffer: Buffer, projectId: string): Promise<{ hasBaseline: boolean, diffPercentage: number }> {
         const testDir = path.join(IMAGES_DIR, id);
         if (!fs.existsSync(testDir)) fs.mkdirSync(testDir, { recursive: true });
 
@@ -126,43 +121,47 @@ export class VisualTestService {
 
         fs.writeFileSync(latestPath, screenshotBuffer);
 
+        let diffPercentage = 0;
+        let hasBaseline = false;
+
         if (fs.existsSync(baselinePath)) {
+            hasBaseline = true;
             const img1 = PNG.sync.read(fs.readFileSync(baselinePath));
             const img2 = PNG.sync.read(screenshotBuffer);
             const { width, height } = img1;
             const diff = new PNG({ width, height });
 
             const numDiffPixels = pixelmatch(img1.data, img2.data, diff.data, width, height, { threshold: 0.1 });
-            const diffPercentage = (numDiffPixels / (width * height)) * 100;
+            diffPercentage = (numDiffPixels / (width * height)) * 100;
 
             fs.writeFileSync(diffPath, PNG.sync.write(diff));
 
             // Update metadata if exists
             try {
-                const all = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf-8'));
-                const idx = all.findIndex((t: VisualTest) => t.id === id);
-                if (idx !== -1) {
-                    all[idx].lastRun = new Date().toISOString();
-                    all[idx].diffPercentage = diffPercentage;
-                    all[idx].status = diffPercentage > 0 ? 'fail' : 'pass';
-                    fs.writeFileSync(METADATA_FILE, JSON.stringify(all, null, 2));
+                const all = await this.getAll(projectId);
+                const test = all.find(t => t.id === id);
+                if (test) {
+                    const updatedTest = {
+                        ...test,
+                        lastRun: new Date().toISOString(),
+                        diffPercentage,
+                        status: diffPercentage > 0 ? 'fail' : 'pass'
+                    };
+                    await localProjectService.saveVisualTest(projectId, updatedTest);
                 }
             } catch (e) {
-                // Ignore metadata update errors if test ID doesn't exist in visual_tests.json (might be a script ID)
+                // Ignore if test not found (e.g. ad-hoc script run)
             }
-
-            return { hasBaseline: true, diffPercentage };
         } else {
-            // Treat as new baseline
-            // Note: We don't automatically promote to baseline unless approved, but for Recorder flow
-            // it seems to treat first run as "New Baseline".
-            // Let's just save it.
-            return { hasBaseline: false, diffPercentage: 0 };
+            // Treat as new
+            hasBaseline = false;
         }
+
+        return { hasBaseline, diffPercentage };
     }
 
     // Approve: Promote Latest to Baseline
-    approve(id: string) {
+    async approve(id: string, projectId: string) {
         const testDir = path.join(IMAGES_DIR, id);
         const latestPath = path.join(testDir, 'latest.png');
         const baselinePath = path.join(testDir, 'baseline.png');
@@ -171,27 +170,25 @@ export class VisualTestService {
             fs.copyFileSync(latestPath, baselinePath);
 
             // Reset status
-            try {
-                const all = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf-8'));
-                const idx = all.findIndex((t: VisualTest) => t.id === id);
-                if (idx !== -1) {
-                    all[idx].diffPercentage = 0;
-                    all[idx].status = 'pass';
-                    fs.writeFileSync(METADATA_FILE, JSON.stringify(all, null, 2));
-                }
-            } catch (e) {
-                // Ignore if not in metadata (e.g. script run)
+            const all = await this.getAll(projectId);
+            const test = all.find(t => t.id === id);
+            if (test) {
+                const updatedTest = {
+                    ...test,
+                    diffPercentage: 0,
+                    status: 'pass'
+                };
+                await localProjectService.saveVisualTest(projectId, updatedTest);
             }
         } else {
             throw new Error('No latest run to approve');
         }
     }
 
-    // Alias for the API call
-    approveBaseline(scriptId: string, runId: string) {
+    // Alias for the API call - requires projectId now!
+    async approveBaseline(scriptId: string, projectId: string) {
         // For script executions, the ID used for folder storage is the scriptId
-        // In a real system, we might version by runId, but for now V1 uses scriptId as the 'test' container
-        this.approve(scriptId);
+        await this.approve(scriptId, projectId);
     }
 
     getImagePath(id: string, type: 'baseline' | 'latest' | 'diff'): string | null {

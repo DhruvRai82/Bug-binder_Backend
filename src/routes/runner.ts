@@ -50,40 +50,6 @@ router.post('/execute-raw', async (req, res) => {
     }
 });
 
-// Get Runs for a Project (History)
-router.get('/history', async (req, res) => {
-    try {
-        const { projectId } = req.query;
-        if (!projectId) return res.status(400).json({ error: 'Project ID required' });
-
-        const { localProjectService } = await import('../services/LocalProjectService');
-        // Use TestRunService (Local) to ensure we see the runs we just executed locally
-        // Previous: projectService.getTestRuns (Remote) - caused sync misalignment
-        const runs = await testRunService.getProjectRuns(projectId as string);
-
-        runs.sort((a, b) => {
-            const timeA = new Date((a as any).started_at || (a as any).created_at || (a as any).startTime || 0).getTime();
-            const timeB = new Date((b as any).started_at || (b as any).created_at || (b as any).startTime || 0).getTime();
-            return timeB - timeA;
-        });
-
-        // Fetch Script Names manually
-        const scripts = await localProjectService.getScripts(projectId as string, 'test-user-id');
-
-        const runsWithNames = runs.map(run => {
-            // @ts-ignore
-            const script = scripts.find(s => s.id === run.script_id);
-            return {
-                ...run,
-                recorded_scripts: { name: script?.name || 'Unknown Script' }
-            };
-        });
-
-        res.json(runsWithNames.slice(0, 50));
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 // Get Details of a Specific Run
 // Route /run/:id removed (Merged into /run/:runId below)
@@ -136,12 +102,12 @@ router.post('/scan', async (req, res) => {
         if (!userId) return res.status(401).json({ error: 'User not authenticated' });
 
         // 1. Scan Disk -> Local DB
-        const { localProjectService } = await import('../services/LocalProjectService');
+        const { localProjectService } = await import('../services/LocalProjectService.js');
         const files = await localProjectService.rescanFiles(projectId);
 
         // 2. Sync Local -> Remote (Firestore)
         // This ensures GET /api/fs (which reads remote) sees the files
-        const { projectService } = await import('../services/ProjectService');
+        const { projectService } = await import('../services/ProjectService.js');
         const remoteFiles = await projectService.getFSNodes(projectId, userId);
 
         let syncedCount = 0;
@@ -206,7 +172,7 @@ router.get('/run/:runId', async (req, res) => {
 
             // 1. Try Local First (Fastest)
             // Dynamic import to avoid circular dep issues if any, though likely fine here
-            const { localProjectService } = await import('../services/LocalProjectService');
+            const { localProjectService } = await import('../services/LocalProjectService.js');
             const localFound = await localProjectService.findTestRunById(runId);
 
             if (localFound) {

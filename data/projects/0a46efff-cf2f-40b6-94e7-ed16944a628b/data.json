@@ -1305,33 +1305,36 @@
       "bugs": []
     }
   ],
-  "scripts": [
-    {
-      "name": "Test",
-      "module": "test",
-      "steps": [
-        {
-          "command": "open",
-          "target": "https://google.com",
-          "targets": [],
-          "value": ""
-        },
-        {
-          "command": "click",
-          "target": "css=div.niO4u.VDgVie.SlP8xc",
-          "targets": [],
-          "value": ""
-        }
-      ],
-      "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "user_id": "test-user-id",
-      "id": "gSzlX3dqKY",
-      "createdAt": "2026-01-02T07:54:42.503Z",
-      "updatedAt": "2026-01-02T07:54:42.503Z"
-    }
-  ],
+  "scripts": [],
   "reports": [],
   "testRuns": [
+    {
+      "id": "f88bec23-568a-4018-b06f-098edbf7b592",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "status": "completed",
+      "startTime": "2026-01-06T10:11:36.563Z",
+      "triggeredBy": "manual",
+      "files": [
+        "081dd0bc-266e-4c80-a13d-55ca84579f9a"
+      ],
+      "results": [
+        {
+          "file": "Google_home.py",
+          "status": "passed",
+          "logs": [
+            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
+          ]
+        }
+      ],
+      "logs": [
+        "[2026-01-06T10:11:36.577Z] [BatchRunner] Starting Run f88bec23-568a-4018-b06f-098edbf7b592",
+        "[2026-01-06T10:11:36.594Z] [BatchRunner] Breakdown: 0 Java, 1 Python, 0 Playwright",
+        "[2026-01-06T10:11:36.595Z] [BatchRunner] Executing 1 Python files...",
+        "[2026-01-06T10:11:36.595Z] Executing Python: Google_home.py",
+        "[2026-01-06T10:11:50.013Z] Finished Python: Google_home.py (PASS)"
+      ],
+      "endTime": "2026-01-06T10:11:50.014Z"
+    },
     {
       "id": "a1bf678d-07b9-4975-aade-d01b9371a2c0",
       "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
@@ -1351,7 +1354,16 @@
     }
   ],
   "schedules": [],
-  "datasets": [],
+  "datasets": [
+    {
+      "name": "Mock Users.json",
+      "content": "[\n  {\n    \"User ID\": \"Jennifer Jackson\",\n    \"Full Name\": \"william.johnson@yahoo.com\",\n    \"Email\": \"+1-836-436-7007\"\n  },\n  {\n    \"User ID\": \"Susan Martinez\",\n    \"Full Name\": \"william.martin@yahoo.com\",\n    \"Email\": \"+1-770-137-1128\"\n  },\n  {\n    \"User ID\": \"Linda Taylor\",\n    \"Full Name\": \"james.moore@gmail.com\",\n    \"Email\": \"+1-805-908-1744\"\n  },\n  {\n    \"User ID\": \"Patricia Johnson\",\n    \"Full Name\": \"mary.jackson@gmail.com\",\n    \"Email\": \"+1-842-579-5527\"\n  },\n  {\n    \"User ID\": \"Barbara Miller\",\n    \"Full Name\": \"john.smith@yahoo.com\",\n    \"Email\": \"+1-174-243-5015\"\n  },\n  {\n    \"User ID\": \"Richard Brown\",\n    \"Full Name\": \"james.miller@example.com\",\n    \"Email\": \"+1-921-781-8117\"\n  },\n  {\n    \"User ID\": \"Karen Gonzalez\",\n    \"Full Name\": \"karen.brown@yahoo.com\",\n    \"Email\": \"+1-877-241-3218\"\n  },\n  {\n    \"User ID\": \"Michael Smith\",\n    \"Full Name\": \"michael.rodriguez@example.com\",\n    \"Email\": \"+1-529-308-6831\"\n  },\n  {\n    \"User ID\": \"Joseph Martin\",\n    \"Full Name\": \"richard.miller@gmail.com\",\n    \"Email\": \"+1-602-885-7340\"\n  },\n  {\n    \"User ID\": \"Thomas Johnson\",\n    \"Full Name\": \"john.anderson@outlook.com\",\n    \"Email\": \"+1-816-884-5918\"\n  },\n  {\n    \"User ID\": \"Sarah Davis\",\n    \"Full Name\": \"joseph.hernandez@example.com\",\n    \"Email\": \"+1-721-316-8915\"\n  },\n  {\n    \"User ID\": \"Sarah Miller\",\n    \"Full Name\": \"mary.williams@outlook.com\",\n    \"Email\": \"+1-580-286-8257\"\n  },\n  {\n    \"User ID\": \"Patricia Johnson\",\n    \"Full Name\": \"joseph.davis@gmail.com\",\n    \"Email\": \"+1-528-670-3697\"\n  },\n  {\n    \"User ID\": \"John Hernandez\",\n    \"Full Name\": \"jennifer.brown@gmail.com\",\n    \"Email\": \"+1-695-893-9103\"\n  },\n  {\n    \"User ID\": \"William Smith\",\n    \"Full Name\": \"michael.martinez@test.org\",\n    \"Email\": \"+1-736-719-2296\"\n  },\n  {\n    \"User ID\": \"Sarah Hernandez\",\n    \"Full Name\": \"mary.garcia@gmail.com\",\n    \"Email\": \"+1-262-355-6945\"\n  },\n  {\n    \"User ID\": \"Joseph Wilson\",\n    \"Full Name\": \"charles.miller@outlook.com\",\n    \"Email\": \"+1-921-410-8238\"\n  },\n  {\n    \"User ID\": \"Sarah Miller\",\n    \"Full Name\": \"john.martin@gmail.com\",\n    \"Email\": \"+1-955-123-7514\"\n  },\n  {\n    \"User ID\": \"Karen Hernandez\",\n    \"Full Name\": \"john.martinez@gmail.com\",\n    \"Email\": \"+1-141-426-8230\"\n  },\n  {\n    \"User ID\": \"Sarah Moore\",\n    \"Full Name\": \"patricia.jones@test.org\",\n    \"Email\": \"+1-673-918-4199\"\n  },\n  {\n    \"User ID\": \"Thomas Smith\",\n    \"Full Name\": \"mary.taylor@gmail.com\",\n    \"Email\": \"+1-928-926-9335\"\n  },\n  {\n    \"User ID\": \"Susan Martin\",\n    \"Full Name\": \"james.wilson@yahoo.com\",\n    \"Email\": \"+1-883-557-3082\"\n  },\n  {\n    \"User ID\": \"Richard Martinez\",\n    \"Full Name\": \"david.davis@test.org\",\n    \"Email\": \"+1-276-280-8390\"\n  },\n  {\n    \"User ID\": \"David Martinez\",\n    \"Full Name\": \"william.garcia@yahoo.com\",\n    \"Email\": \"+1-697-764-1995\"\n  },\n  {\n    \"User ID\": \"William Williams\",\n    \"Full Name\": \"john.miller@test.org\",\n    \"Email\": \"+1-202-592-3350\"\n  },\n  {\n    \"User ID\": \"Patricia Garcia\",\n    \"Full Name\": \"mary.garcia@example.com\",\n    \"Email\": \"+1-619-991-3575\"\n  },\n  {\n    \"User ID\": \"Elizabeth Gonzalez\",\n    \"Full Name\": \"jessica.lopez@example.com\",\n    \"Email\": \"+1-329-352-6307\"\n  },\n  {\n    \"User ID\": \"Mary Lopez\",\n    \"Full Name\": \"michael.rodriguez@test.org\",\n    \"Email\": \"+1-787-704-5992\"\n  },\n  {\n    \"User ID\": \"Richard Martin\",\n    \"Full Name\": \"john.wilson@test.org\",\n    \"Email\": \"+1-125-502-9453\"\n  },\n  {\n    \"User ID\": \"David Rodriguez\",\n    \"Full Name\": \"sarah.hernandez@example.com\",\n    \"Email\": \"+1-157-506-8295\"\n  },\n  {\n    \"User ID\": \"Susan Rodriguez\",\n    \"Full Name\": \"thomas.johnson@outlook.com\",\n    \"Email\": \"+1-327-600-7726\"\n  },\n  {\n    \"User ID\": \"Richard Martin\",\n    \"Full Name\": \"robert.jones@example.com\",\n    \"Email\": \"+1-747-117-8304\"\n  },\n  {\n    \"User ID\": \"Mary Brown\",\n    \"Full Name\": \"michael.jones@example.com\",\n    \"Email\": \"+1-497-470-6736\"\n  },\n  {\n    \"User ID\": \"Charles Williams\",\n    \"Full Name\": \"barbara.anderson@yahoo.com\",\n    \"Email\": \"+1-163-869-6681\"\n  },\n  {\n    \"User ID\": \"Susan Miller\",\n    \"Full Name\": \"thomas.martinez@example.com\",\n    \"Email\": \"+1-949-911-1684\"\n  },\n  {\n    \"User ID\": \"Karen Moore\",\n    \"Full Name\": \"william.jones@yahoo.com\",\n    \"Email\": \"+1-488-178-7217\"\n  },\n  {\n    \"User ID\": \"Mary Rodriguez\",\n    \"Full Name\": \"charles.brown@yahoo.com\",\n    \"Email\": \"+1-426-709-9121\"\n  },\n  {\n    \"User ID\": \"Barbara Jones\",\n    \"Full Name\": \"karen.williams@test.org\",\n    \"Email\": \"+1-508-643-6178\"\n  },\n  {\n    \"User ID\": \"Michael Brown\",\n    \"Full Name\": \"david.jones@outlook.com\",\n    \"Email\": \"+1-939-650-1150\"\n  },\n  {\n    \"User ID\": \"William Jones\",\n    \"Full Name\": \"charles.rodriguez@test.org\",\n    \"Email\": \"+1-732-820-8836\"\n  },\n  {\n    \"User ID\": \"Jennifer Smith\",\n    \"Full Name\": \"david.johnson@yahoo.com\",\n    \"Email\": \"+1-505-131-9529\"\n  },\n  {\n    \"User ID\": \"Richard Brown\",\n    \"Full Name\": \"sarah.rodriguez@test.org\",\n    \"Email\": \"+1-822-936-7214\"\n  },\n  {\n    \"User ID\": \"Robert Johnson\",\n    \"Full Name\": \"james.lopez@gmail.com\",\n    \"Email\": \"+1-958-905-5109\"\n  },\n  {\n    \"User ID\": \"Karen Wilson\",\n    \"Full Name\": \"elizabeth.martinez@example.com\",\n    \"Email\": \"+1-960-819-6252\"\n  },\n  {\n    \"User ID\": \"Susan Johnson\",\n    \"Full Name\": \"susan.thomas@example.com\",\n    \"Email\": \"+1-380-191-4369\"\n  },\n  {\n    \"User ID\": \"David Davis\",\n    \"Full Name\": \"patricia.anderson@outlook.com\",\n    \"Email\": \"+1-592-630-9115\"\n  },\n  {\n    \"User ID\": \"Sarah Lopez\",\n    \"Full Name\": \"linda.taylor@yahoo.com\",\n    \"Email\": \"+1-786-668-5704\"\n  },\n  {\n    \"User ID\": \"Robert Moore\",\n    \"Full Name\": \"patricia.gonzalez@example.com\",\n    \"Email\": \"+1-664-317-3722\"\n  },\n  {\n    \"User ID\": \"Mary Davis\",\n    \"Full Name\": \"patricia.anderson@test.org\",\n    \"Email\": \"+1-385-121-8291\"\n  },\n  {\n    \"User ID\": \"Joseph Martin\",\n    \"Full Name\": \"mary.lopez@example.com\",\n    \"Email\": \"+1-682-813-4082\"\n  }\n]",
+      "data_type": "json",
+      "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "id": "UXz4vWrm6f",
+      "created_at": "2026-01-07T09:40:16.255Z"
+    }
+  ],
   "files": [
     {
       "id": "081dd0bc-266e-4c80-a13d-55ca84579f9a",
@@ -1362,8 +1374,9 @@
       "name": "Google_home.py",
       "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
       "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
-      "content": "",
-      "type": "file"
+      "type": "file",
+      "content": "from selenium import webdriver\r\nfrom selenium.webdriver.chrome.service import Service\r\nimport time\r\n\r\n# 1. Initialize the Chrome Driver\r\ndriver = webdriver.Chrome()\r\n\r\ntry:\r\n    # 2. Open Google\r\n    driver.get(\"https://www.google.com\")\r\n    print(\"Browser opened to Google.\")\r\n\r\n    # 3. Wait for 5 seconds\r\n    time.sleep(5)\r\n\r\nfinally:\r\n    # 4. Exit/Close the browser\r\n    driver.quit()\r\n    print(\"Browser closed successfully.\")",
+      "updated_at": "2026-01-05T08:53:07.288Z"
     },
     {
       "id": "389a7a06-f284-486e-a5aa-7cb17120a82f",
@@ -1383,9 +1396,10 @@
       "type": "file",
       "language": "java",
       "parent_id": "389a7a06-f284-486e-a5aa-7cb17120a82f",
-      "content": "",
       "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "name": "LoginTest.java"
+      "name": "LoginTest.java",
+      "updated_at": "2026-01-05T08:55:10.190Z",
+      "content": "\r\nimport io.github.bonigarcia.wdm.WebDriverManager;\r\nimport org.openqa.selenium.*;\r\nimport org.openqa.selenium.firefox.FirefoxDriver;\r\nimport org.openqa.selenium.firefox.FirefoxOptions;\r\nimport org.openqa.selenium.support.ui.ExpectedConditions;\r\nimport org.openqa.selenium.support.ui.WebDriverWait;\r\nimport org.testng.annotations.*;\r\n\r\nimport java.time.Duration;\r\n\r\npublic class LoginTest {\r\n\r\n    WebDriver driver;\r\n    WebDriverWait wait;\r\n\r\n    // 🔹 URL of your login page\r\n    String url = \"https://admin.foodchow.com/RestaurantLogin\";\r\n    // If you’re testing your demo, replace with your exact login URL.\r\n\r\n    // 🔹 Locators (from your HTML)\r\n    By email = By.id(\"txtEmailId\");\r\n    By password = By.name(\"Password\"); // safer than duplicate id\r\n    By loginBtn = By.xpath(\"//button[contains(.,'Login') or contains(.,'Sign in')]\");\r\n    By logoutBtn = By.id(\"btn_logout\");\r\n\r\n    // 🔹 Data array: { email, password, expectedSuccess }\r\n    Object[][] testData = {\r\n            {\"testing1@tenacioustechies.com.au\", \"123456\", true},\r\n            {\"testing@tenacioustechies.com\", \"123456\", true},\r\n            {\"testing@tenacioustechies.com\", \"wrongpass\", false},\r\n            {\"invalidemail\", \"123456\", false},\r\n            {\"unknown@tenacioustechies.com\", \"123456\", false}\r\n    };\r\n\r\n    @BeforeClass\r\n    public void setup() {\r\n        WebDriverManager.firefoxdriver().setup();\r\n        FirefoxOptions options = new FirefoxOptions();\r\n        // options.addArguments(\"-headless\"); // uncomment to run without UI\r\n        driver = new FirefoxDriver(options);\r\n        wait = new WebDriverWait(driver, Duration.ofSeconds(10));\r\n        driver.manage().window().maximize();\r\n    }\r\n\r\n    @AfterClass\r\n    public void teardown() {\r\n        driver.quit();\r\n    }\r\n\r\n    @Test\r\n    public void testLoginArray() throws InterruptedException {\r\n        for (Object[] data : testData) {\r\n            String emailData = (String) data[0];\r\n            String passData = (String) data[1];\r\n            boolean expectedSuccess = (Boolean) data[2];\r\n\r\n            System.out.println(\"\\nTrying login: \" + emailData);\r\n\r\n            driver.get(url);\r\n            wait.until(ExpectedConditions.visibilityOfElementLocated(email)).clear();\r\n            driver.findElement(email).sendKeys(emailData);\r\n\r\n            WebElement pass = wait.until(ExpectedConditions.visibilityOfElementLocated(password));\r\n            pass.clear();\r\n            pass.sendKeys(passData);\r\n\r\n            // Click login or press enter if no button\r\n            if (driver.findElements(loginBtn).size() > 0)\r\n                driver.findElement(loginBtn).click();\r\n            else\r\n                pass.sendKeys(Keys.ENTER);\r\n\r\n            // Wait a bit for page reaction\r\n            Thread.sleep(2000);\r\n\r\n            boolean loggedIn = driver.findElements(logoutBtn).size() > 0;\r\n\r\n            if (loggedIn) {\r\n                System.out.println(\"✅ Logged in successfully.\");\r\n                if (!expectedSuccess)\r\n                    System.out.println(\"❌ Expected failure but login succeeded.\");\r\n                // Logout\r\n                driver.findElement(logoutBtn).click();\r\n                Thread.sleep(1000);\r\n            } else {\r\n                System.out.println(\"❌ Login failed.\");\r\n                if (expectedSuccess)\r\n                    System.out.println(\"❌ Expected success but login failed.\");\r\n            }\r\n        }\r\n    }\r\n}\r\n"
     },
     {
       "id": "7d3e4aac-7b96-4f25-bad0-91eb4b8ddfc3",
@@ -1396,6 +1410,18 @@
       "type": "folder",
       "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
       "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b"
+    },
+    {
+      "id": "ecc63300-37aa-4d1f-ae78-6a28f22800e5",
+      "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
+      "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "language": "java",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "name": "OrderOnlineRepeatChromeTest.java",
+      "type": "file",
+      "created_at": "2026-01-05T08:48:11.468Z",
+      "content": "\r\n\r\nimport org.openqa.selenium.*;\r\nimport org.openqa.selenium.chrome.ChromeDriver;\r\nimport org.openqa.selenium.chrome.ChromeOptions;\r\nimport org.openqa.selenium.support.ui.*;\r\nimport org.testng.annotations.*;\r\n\r\nimport java.time.Duration;\r\nimport java.util.List;\r\n\r\npublic class OrderOnlineRepeatChromeTest {\r\n\r\n    private WebDriver driver;\r\n    private WebDriverWait wait;\r\n\r\n    private static final String START_URL = \"https://www.foodchow.com/foodchowdemoindia/order-online\";\r\n    private static final long STEP_PAUSE_MS = 1200;\r\n\r\n    @BeforeClass\r\n    public void setUp() {\r\n        // NOTE: Selenium 4.6+ auto-manages drivers. No WebDriverManager needed.\r\n        ChromeOptions options = new ChromeOptions();\r\n        options.addArguments(\"--start-maximized\");\r\n        options.addArguments(\"--remote-allow-origins=*\"); // Critical for recent Chrome\r\n        \r\n        driver = new ChromeDriver(options);\r\n        wait = new WebDriverWait(driver, Duration.ofSeconds(30));\r\n    }\r\n\r\n    @AfterClass\r\n    public void tearDown() {\r\n        if (driver != null) driver.quit();\r\n    }\r\n\r\n    @Test\r\n    public void placeSingleOrder() throws InterruptedException {\r\n        System.out.println(\"\\n========== START SINGLE RUN ==========\");\r\n\r\n        try {\r\n            driver.get(START_URL);\r\n            Thread.sleep(2000);\r\n\r\n            // --------- STEP 1: Start Order ---------\r\n            click(By.cssSelector(\"header div.h-full.w-full.gap-4.lg\\\\:flex.hidden.items-center > div > div.flex.gap-2 > button:nth-child(1)\"));\r\n            click(By.xpath(\"//button[.//span[normalize-space()='Pickup'] or normalize-space(.)='Pickup']\"));\r\n            click(By.cssSelector(\"[id*='content-choose_order_time'] button:nth-child(1)\"));\r\n            click(By.cssSelector(\"#category-deals button\"));\r\n\r\n            // --------- STEP 2: Select Items ---------\r\n            click(By.cssSelector(\"label[for='group-0-category-0-item-1']\"));\r\n            clickAddItemModal();\r\n\r\n            click(By.cssSelector(\"label[for='group-1-category-0-item-0']\"));\r\n            clickAddItemModal();\r\n\r\n            Thread.sleep(1500);\r\n            clickProceedToCheckoutFixed();\r\n\r\n            // --------- STEP 3: Final Checkout ---------\r\n            wait.until(ExpectedConditions.urlContains(\"/final-checkout\"));\r\n            Thread.sleep(2000);\r\n\r\n            type(By.xpath(\"//input[contains(@placeholder,'First')]\"), \"Dhruv\");\r\n            type(By.xpath(\"//input[contains(@placeholder,'Last')]\"), \"Raiyani\");\r\n\r\n            // ✅ Stable React mobile field handling\r\n            fillReactInput(\"Enter Your Mobile Number\", \"9737215041\");\r\n\r\n            // ✅ Click Save\r\n            clickIfPresent(By.xpath(\"//button[contains(.,'Save') and @type='submit']\"));\r\n\r\n            // ✅ Wait until Save completes (Payment Method section visible)\r\n            wait.until(ExpectedConditions.visibilityOfElementLocated(\r\n                    By.xpath(\"//*[contains(.,'PAYMENT METHOD') or contains(.,'Payment Method')]\")));\r\n\r\n            // --------- STEP 4: Payment and Confirmation ---------\r\n            if (!clickIfPresent(By.cssSelector(\"input[id*='Card'], button[id*='Card'], div[id*='Card']\"))) {\r\n                clickIfPresent(By.xpath(\"//*[contains(text(),'Cash')]\"));\r\n            }\r\n\r\n            clickIfPresent(By.xpath(\"//button[contains(.,'Proceed') or contains(.,'Place') or contains(.,'Pay')]\"));\r\n\r\n            boolean success = waitUntilAnyTextAppears(new String[]{\r\n                    \"Thank you\", \"Order placed\", \"successfully\", \"Thank You For Ordering\"\r\n            }, 20);\r\n\r\n            if (success) {\r\n                System.out.println(\"✅ Order successfully placed!\");\r\n            } else {\r\n                System.out.println(\"⚠️ No confirmation detected (may have validation error).\");\r\n            }\r\n\r\n        } catch (Exception e) {\r\n            System.out.println(\"❌ Failed to place order: \" + e.getMessage());\r\n        }\r\n\r\n        System.out.println(\"========== END SINGLE RUN ==========\\n\");\r\n    }\r\n\r\n    // ---------------------- Helper Methods ----------------------\r\n\r\n    private void click(By locator) throws InterruptedException {\r\n        WebElement el = wait.until(ExpectedConditions.elementToBeClickable(locator));\r\n        scroll(el);\r\n        safeClick(el);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    private void type(By locator, String value) throws InterruptedException {\r\n        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));\r\n        scroll(el);\r\n        el.clear();\r\n        el.sendKeys(value);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    /** ✅ FIXED: React input + validation triggers */\r\n    private void fillReactInput(String placeholderText, String value) throws InterruptedException {\r\n        By reactInput = By.xpath(\"//input[@placeholder='\" + placeholderText + \"']\");\r\n        WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(reactInput));\r\n        scroll(input);\r\n\r\n        ((JavascriptExecutor) driver).executeScript(\r\n                \"const el = arguments[0];\" +\r\n                        \"const val = arguments[1];\" +\r\n                        \"const proto = Object.getPrototypeOf(el);\" +\r\n                        \"const desc = Object.getOwnPropertyDescriptor(proto, 'value') || Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');\" +\r\n                        \"desc.set.call(el, val);\" +\r\n                        \"el.dispatchEvent(new Event('input', { bubbles: true }));\" +\r\n                        \"el.dispatchEvent(new Event('change', { bubbles: true }));\" +\r\n                        \"el.dispatchEvent(new Event('blur', { bubbles: true }));\",\r\n                input, value\r\n        );\r\n\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n        System.out.println(\"✅ Filled phone (triggered validation): \" + value);\r\n    }\r\n\r\n    private void clickAddItemModal() throws InterruptedException {\r\n        By modalContainer = By.cssSelector(\"div[class*='DealModal_nestedModalBox']\");\r\n        By addButton = By.xpath(\"//div[contains(@class,'DealModal_btnAdd')]/button\");\r\n        wait.until(ExpectedConditions.visibilityOfElementLocated(modalContainer));\r\n        Thread.sleep(700);\r\n        WebElement btn = wait.until(ExpectedConditions.presenceOfElementLocated(addButton));\r\n        scroll(btn);\r\n        ((JavascriptExecutor) driver).executeScript(\"arguments[0].click();\", btn);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    private void clickProceedToCheckoutFixed() throws InterruptedException {\r\n        By btn = By.xpath(\"//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'proceed to checkout')]\");\r\n        List<WebElement> buttons = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(btn));\r\n        WebElement checkoutBtn = buttons.get(buttons.size() - 1);\r\n        scroll(checkoutBtn);\r\n        ((JavascriptExecutor) driver).executeScript(\"arguments[0].click();\", checkoutBtn);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    private boolean clickIfPresent(By locator) throws InterruptedException {\r\n        List<WebElement> els = driver.findElements(locator);\r\n        for (WebElement el : els) {\r\n            if (el.isDisplayed()) {\r\n                scroll(el);\r\n                safeClick(el);\r\n                Thread.sleep(STEP_PAUSE_MS);\r\n                return true;\r\n            }\r\n        }\r\n        return false;\r\n    }\r\n\r\n    private void safeClick(WebElement el) {\r\n        try {\r\n            el.click();\r\n        } catch (Exception e) {\r\n            ((JavascriptExecutor) driver).executeScript(\"arguments[0].click();\", el);\r\n        }\r\n    }\r\n\r\n    private void scroll(WebElement el) {\r\n        ((JavascriptExecutor) driver).executeScript(\r\n                \"arguments[0].scrollIntoView({behavior:'smooth',block:'center'});\", el);\r\n    }\r\n\r\n    /** Waits for text like 'Thank you' or 'Order placed' */\r\n    private boolean waitUntilAnyTextAppears(String[] keywords, int timeoutSec) {\r\n        long end = System.currentTimeMillis() + timeoutSec * 1000L;\r\n        while (System.currentTimeMillis() < end) {\r\n            String body = driver.findElement(By.tagName(\"body\")).getText().toLowerCase();\r\n            for (String k : keywords) {\r\n                if (body.contains(k.toLowerCase())) return true;\r\n            }\r\n            try { Thread.sleep(1000); } catch (InterruptedException ignored) {}\r\n        }\r\n        return false;\r\n    }\r\n}\r\n\r\n",
+      "updated_at": "2026-01-05T08:50:05.266Z"
     }
   ],
   "apiCollections": []

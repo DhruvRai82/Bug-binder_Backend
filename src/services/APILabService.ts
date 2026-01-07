@@ -12,16 +12,10 @@ export class APILabService {
     async getCollections(projectId: string) {
         try {
             const snapshot = await this.getColsRef(projectId).get();
-            const collections = await Promise.all(snapshot.docs.map(async doc => {
-                const data = doc.data();
-                // Fetch requests subcollection
-                const requestsSnap = await doc.ref.collection('requests').get();
-                const requests = requestsSnap.docs.map(r => ({ id: r.id, ...r.data() }));
-                return {
-                    id: doc.id,
-                    ...data,
-                    requests
-                };
+            const collections = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                requests: [] as any[] // Lazy load these later
             }));
 
             // Sort by created_at if available
@@ -35,6 +29,12 @@ export class APILabService {
         } catch (error: any) {
             throw new Error(error.message);
         }
+    }
+
+    async getCollectionRequests(collectionId: string, projectId: string) {
+        if (!projectId) throw new Error("ProjectId required");
+        const snapshot = await this.getColsRef(projectId).doc(collectionId).collection('requests').get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async createCollection(name: string, projectId: string) {
@@ -106,7 +106,7 @@ export class APILabService {
                 // Found it.
                 const reqRef = this.getColsRef(projectId).doc(col.id).collection('requests').doc(id);
                 await reqRef.update(updates);
-                return { ...req, ...updates };
+                return { ...req, ...(updates as any) };
             }
         }
         throw new Error('Request not found');

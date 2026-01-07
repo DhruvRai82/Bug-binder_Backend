@@ -22,22 +22,39 @@ interface ProjectData {
     datasets: any[];
     files: any[];
     apiCollections: any[]; // Added for APILabService
+    visualTests: any[]; // Added for VisualTestService
 }
 // ... existing code ...
 
 
-const DATA_DIR = path.join(__dirname, '../../data');
-const PROJECTS_FILE = path.join(DATA_DIR, 'projects.json');
+// const DATA_DIR = path.join(__dirname, '../../data');
+// const PROJECTS_FILE = path.join(DATA_DIR, 'projects.json');
 
 export class LocalProjectService {
+    private dataDir: string;
+    private projectsFile: string;
+
+    constructor() {
+        // Universal Path Resolution (Works in CJS Backend & ESM Electron)
+        const cwd = process.cwd();
+        // If running from 'backend' dir (Backend Server)
+        if (cwd.endsWith('backend') || cwd.endsWith('backend' + path.sep)) {
+            this.dataDir = path.join(cwd, 'data');
+        } else {
+            // If running from root (Electron / Repo root)
+            this.dataDir = path.join(cwd, 'backend', 'data');
+        }
+        this.projectsFile = path.join(this.dataDir, 'projects.json');
+        console.log('[LocalProjectService] Data Dir initialized at:', this.dataDir);
+    }
     private async ensureDataDir() {
         try {
-            await fs.access(DATA_DIR);
+            await fs.access(this.dataDir);
         } catch {
-            await fs.mkdir(DATA_DIR, { recursive: true });
+            await fs.mkdir(this.dataDir, { recursive: true });
         }
         // Also ensure projects directory
-        const projectsDir = path.join(DATA_DIR, 'projects');
+        const projectsDir = path.join(this.dataDir, 'projects');
         try {
             await fs.access(projectsDir);
         } catch {
@@ -60,7 +77,7 @@ export class LocalProjectService {
     private async readProjectsFile(): Promise<{ projects: Project[] }> {
         await this.ensureDataDir();
         try {
-            const data = await fs.readFile(PROJECTS_FILE, 'utf-8');
+            const data = await fs.readFile(this.projectsFile, 'utf-8');
             return JSON.parse(data);
         } catch (error) {
             if ((error as any).code === 'ENOENT') {
@@ -72,11 +89,11 @@ export class LocalProjectService {
 
     private async writeProjectsFile(data: { projects: Project[] }) {
         await this.ensureDataDir();
-        await fs.writeFile(PROJECTS_FILE, JSON.stringify(data, null, 2));
+        await fs.writeFile(this.projectsFile, JSON.stringify(data, null, 2));
     }
 
     private getProjectDir(projectId: string): string {
-        return path.join(DATA_DIR, 'projects', projectId);
+        return path.join(this.dataDir, 'projects', projectId);
     }
 
     private getProjectDataFilePath(projectId: string): string {
@@ -146,7 +163,7 @@ export class LocalProjectService {
     }
 
     private getEmptyProjectData(): ProjectData {
-        return { customPages: [], dailyData: [], scripts: [], reports: [], testRuns: [], schedules: [], datasets: [], files: [], apiCollections: [] };
+        return { customPages: [], dailyData: [], scripts: [], reports: [], testRuns: [], schedules: [], datasets: [], files: [], apiCollections: [], visualTests: [] };
     }
 
     // Direct write - unsafe if not part of a transaction, but we lock it anyway.
@@ -735,6 +752,43 @@ export class LocalProjectService {
         if (!data.apiCollections) return;
 
         data.apiCollections = data.apiCollections.filter((c: any) => c.id !== collectionId);
+        await this.writeProjectData(projectId, data);
+    }
+
+    // --- Visual Tests ---
+
+    async getVisualTests(projectId: string): Promise<any[]> {
+        const data = await this.readProjectData(projectId);
+        return data.visualTests || [];
+    }
+
+    async saveVisualTest(projectId: string, test: any): Promise<any> {
+        const data = await this.readProjectData(projectId);
+        if (!data.visualTests) data.visualTests = [];
+
+        let result;
+        const index = data.visualTests.findIndex((t: any) => t.id === test.id);
+        if (index !== -1) {
+            data.visualTests[index] = { ...data.visualTests[index], ...test };
+            result = data.visualTests[index];
+        } else {
+            const newTest = {
+                ...test,
+                id: test.id || this.generateShortId(),
+                created_at: new Date().toISOString()
+            };
+            data.visualTests.push(newTest);
+            result = newTest;
+        }
+        await this.writeProjectData(projectId, data);
+        return result;
+    }
+
+    async deleteVisualTest(projectId: string, testId: string): Promise<void> {
+        const data = await this.readProjectData(projectId);
+        if (!data.visualTests) return;
+
+        data.visualTests = data.visualTests.filter((t: any) => t.id !== testId);
         await this.writeProjectData(projectId, data);
     }
     async rescanFiles(projectId: string): Promise<any[]> {
