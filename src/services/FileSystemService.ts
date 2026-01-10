@@ -66,6 +66,25 @@ export class FileSystemService {
         }
     }
 
+    // Get Single Node by ID (Scan all projects locally for speed/simplicity)
+    async getNode(id: string, userId: string): Promise<FSNode | null> {
+        // Since we don't have projectId, we scan local projects
+        const projects = await localProjectService.getAllProjects(userId);
+
+        for (const p of projects) {
+            const files = await localProjectService.getFSNodes(p.id);
+            const file = files.find((f: any) => f.id === id);
+            if (file) {
+                // Ensure we return clean FSNode
+                return file as FSNode;
+            }
+        }
+
+        // Fallback: Query remote if we had a global index, but we don't.
+        // Assuming local sync is good enough for now.
+        return null;
+    }
+
     async createNode(params: {
         projectId: string;
         userId: string;

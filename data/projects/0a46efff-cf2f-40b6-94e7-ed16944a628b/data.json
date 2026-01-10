@@ -1309,6 +1309,203 @@
   "reports": [],
   "testRuns": [
     {
+      "id": "0135fb25-a29b-48fc-9869-67af442fca31",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "status": "completed",
+      "startTime": "2026-01-09T12:09:31.188Z",
+      "triggeredBy": "manual",
+      "files": [
+        "f37346f4-fa23-4add-be48-f38e814adafd"
+      ],
+      "results": [
+        {
+          "file": "Test.java",
+          "status": "passed",
+          "logs": [
+            "--- Execution Started ---\r\n",
+            "Output from method1: Hi\r\n",
+            "Output from method2: 100\r\n",
+            "Static y value: 100\r\n",
+            "Instance x value: 500\r\n"
+          ]
+        }
+      ],
+      "logs": [
+        "[2026-01-09T12:09:31.198Z] [BatchRunner] Starting Run 0135fb25-a29b-48fc-9869-67af442fca31 with config: {\"environment\":\"local\",\"browser\":\"chrome\",\"headless\":false,\"parallel\":1}",
+        "[2026-01-09T12:09:31.231Z] [BatchRunner] Breakdown: 1 Java, 0 Python, 0 Playwright",
+        "[2026-01-09T12:09:31.232Z] [BatchRunner] Executing 1 Java files...",
+        "[2026-01-09T12:09:31.232Z] Executing Java: Test.java",
+        "[2026-01-09T12:09:33.731Z] Finished Java: Test.java (PASS)"
+      ],
+      "endTime": "2026-01-09T12:09:33.731Z"
+    },
+    {
+      "id": "0eba4302-89ad-48d9-b99e-153f15d926ed",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "status": "completed",
+      "startTime": "2026-01-09T11:52:36.476Z",
+      "triggeredBy": "manual",
+      "files": [
+        "541319ef-6599-4167-b59d-f082ae355697"
+      ],
+      "results": [
+        {
+          "file": "LoginTest.java",
+          "status": "failed",
+          "logs": [
+            "[Details] Jan 09, 2026 5:22:39 PM org.testng.log4testng.Logger info\r\nINFO: [TestNG] Running:\n  Command line suite\n\r\n",
+            "\n===============================================\nCommand line suite\nTotal tests run: 1, Passes: 0, Failures: 0, Skips: 1\nConfiguration Failures: 1, Skips: 1\n===============================================\n\r\n"
+          ]
+        }
+      ],
+      "logs": [
+        "[2026-01-09T11:52:36.480Z] [BatchRunner] Starting Run 0eba4302-89ad-48d9-b99e-153f15d926ed with config: {\"environment\":\"local\",\"browser\":\"chrome\",\"headless\":true,\"parallel\":1}",
+        "[2026-01-09T11:52:36.514Z] [BatchRunner] Breakdown: 1 Java, 0 Python, 0 Playwright",
+        "[2026-01-09T11:52:36.514Z] [BatchRunner] Executing 1 Java files...",
+        "[2026-01-09T11:52:36.515Z] Executing Java: LoginTest.java",
+        "[2026-01-09T11:52:39.709Z] Finished Java: LoginTest.java (FAIL)"
+      ],
+      "endTime": "2026-01-09T11:52:39.709Z"
+    },
+    {
+      "id": "28cb3fe0-eabe-4716-87cc-517f761a5258",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "status": "completed",
+      "startTime": "2026-01-09T11:51:44.599Z",
+      "triggeredBy": "manual",
+      "files": [
+        "081dd0bc-266e-4c80-a13d-55ca84579f9a",
+        "f37346f4-fa23-4add-be48-f38e814adafd"
+      ],
+      "results": [
+        {
+          "file": "Test.java",
+          "status": "passed",
+          "logs": [
+            "--- Execution Started ---\r\n",
+            "Output from method1: Hi\r\n",
+            "Output from method2: 100\r\n",
+            "Static y value: 100\r\n",
+            "Instance x value: 500\r\n"
+          ]
+        },
+        {
+          "file": "Google_home.py",
+          "status": "passed",
+          "logs": [
+            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
+          ]
+        }
+      ],
+      "logs": [
+        "[2026-01-09T11:51:44.610Z] [BatchRunner] Starting Run 28cb3fe0-eabe-4716-87cc-517f761a5258 with config: {\"environment\":\"local\",\"browser\":\"chrome\",\"headless\":false,\"parallel\":1}",
+        "[2026-01-09T11:51:44.628Z] [BatchRunner] Breakdown: 1 Java, 1 Python, 0 Playwright",
+        "[2026-01-09T11:51:44.628Z] [BatchRunner] Executing 1 Java files...",
+        "[2026-01-09T11:51:44.629Z] Executing Java: Test.java",
+        "[2026-01-09T11:51:44.658Z] [BatchRunner] Executing 1 Python files...",
+        "[2026-01-09T11:51:44.660Z] Executing Python: Google_home.py",
+        "[2026-01-09T11:51:46.900Z] Finished Java: Test.java (PASS)",
+        "[2026-01-09T11:51:55.601Z] Finished Python: Google_home.py (PASS)"
+      ],
+      "endTime": "2026-01-09T11:51:55.601Z"
+    },
+    {
+      "id": "67a3686e-4281-49b3-b6d6-0df6c31202fa",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "status": "completed",
+      "startTime": "2026-01-09T09:47:13.382Z",
+      "triggeredBy": "manual",
+      "files": [
+        "081dd0bc-266e-4c80-a13d-55ca84579f9a"
+      ],
+      "results": [
+        {
+          "file": "Google_home.py",
+          "status": "passed",
+          "logs": [
+            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
+          ]
+        }
+      ],
+      "logs": [
+        "[2026-01-09T09:47:13.392Z] [BatchRunner] Starting Run 67a3686e-4281-49b3-b6d6-0df6c31202fa",
+        "[2026-01-09T09:47:13.415Z] [BatchRunner] Breakdown: 0 Java, 1 Python, 0 Playwright",
+        "[2026-01-09T09:47:13.415Z] [BatchRunner] Executing 1 Python files...",
+        "[2026-01-09T09:47:13.416Z] Executing Python: Google_home.py",
+        "[2026-01-09T09:47:24.189Z] Finished Python: Google_home.py (PASS)"
+      ],
+      "endTime": "2026-01-09T09:47:24.189Z"
+    },
+    {
+      "id": "0c119453-7b26-420d-8a5f-05a650b28016",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "status": "completed",
+      "startTime": "2026-01-09T09:46:52.610Z",
+      "triggeredBy": "manual",
+      "files": [
+        "081dd0bc-266e-4c80-a13d-55ca84579f9a"
+      ],
+      "results": [
+        {
+          "file": "Google_home.py",
+          "status": "passed",
+          "logs": [
+            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
+          ]
+        }
+      ],
+      "logs": [
+        "[2026-01-09T09:46:52.617Z] [BatchRunner] Starting Run 0c119453-7b26-420d-8a5f-05a650b28016",
+        "[2026-01-09T09:46:52.637Z] [BatchRunner] Breakdown: 0 Java, 1 Python, 0 Playwright",
+        "[2026-01-09T09:46:52.637Z] [BatchRunner] Executing 1 Python files...",
+        "[2026-01-09T09:46:52.638Z] Executing Python: Google_home.py",
+        "[2026-01-09T09:47:03.497Z] Finished Python: Google_home.py (PASS)"
+      ],
+      "endTime": "2026-01-09T09:47:03.498Z"
+    },
+    {
+      "id": "e3108942-0872-4216-9bf2-bf7f49448afc",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "status": "completed",
+      "startTime": "2026-01-09T08:36:10.876Z",
+      "triggeredBy": "manual",
+      "files": [
+        "081dd0bc-266e-4c80-a13d-55ca84579f9a",
+        "f37346f4-fa23-4add-be48-f38e814adafd"
+      ],
+      "results": [
+        {
+          "file": "Test.java",
+          "status": "passed",
+          "logs": [
+            "--- Execution Started ---\r\n",
+            "Output from method1: Hi\r\n",
+            "Output from method2: 100\r\n",
+            "Static y value: 100\r\n",
+            "Instance x value: 500\r\n"
+          ]
+        },
+        {
+          "file": "Google_home.py",
+          "status": "passed",
+          "logs": [
+            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
+          ]
+        }
+      ],
+      "logs": [
+        "[2026-01-09T08:36:10.892Z] [BatchRunner] Starting Run e3108942-0872-4216-9bf2-bf7f49448afc",
+        "[2026-01-09T08:36:10.932Z] [BatchRunner] Breakdown: 1 Java, 1 Python, 0 Playwright",
+        "[2026-01-09T08:36:10.933Z] [BatchRunner] Executing 1 Java files...",
+        "[2026-01-09T08:36:10.933Z] Executing Java: Test.java",
+        "[2026-01-09T08:36:10.970Z] [BatchRunner] Executing 1 Python files...",
+        "[2026-01-09T08:36:10.971Z] Executing Python: Google_home.py",
+        "[2026-01-09T08:36:13.175Z] Finished Java: Test.java (PASS)",
+        "[2026-01-09T08:36:26.896Z] Finished Python: Google_home.py (PASS)"
+      ],
+      "endTime": "2026-01-09T08:36:26.896Z"
+    },
+    {
       "id": "f88bec23-568a-4018-b06f-098edbf7b592",
       "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
       "status": "completed",
@@ -1421,7 +1618,19 @@
       "type": "file",
       "created_at": "2026-01-05T08:48:11.468Z",
       "content": "\r\n\r\nimport org.openqa.selenium.*;\r\nimport org.openqa.selenium.chrome.ChromeDriver;\r\nimport org.openqa.selenium.chrome.ChromeOptions;\r\nimport org.openqa.selenium.support.ui.*;\r\nimport org.testng.annotations.*;\r\n\r\nimport java.time.Duration;\r\nimport java.util.List;\r\n\r\npublic class OrderOnlineRepeatChromeTest {\r\n\r\n    private WebDriver driver;\r\n    private WebDriverWait wait;\r\n\r\n    private static final String START_URL = \"https://www.foodchow.com/foodchowdemoindia/order-online\";\r\n    private static final long STEP_PAUSE_MS = 1200;\r\n\r\n    @BeforeClass\r\n    public void setUp() {\r\n        // NOTE: Selenium 4.6+ auto-manages drivers. No WebDriverManager needed.\r\n        ChromeOptions options = new ChromeOptions();\r\n        options.addArguments(\"--start-maximized\");\r\n        options.addArguments(\"--remote-allow-origins=*\"); // Critical for recent Chrome\r\n        \r\n        driver = new ChromeDriver(options);\r\n        wait = new WebDriverWait(driver, Duration.ofSeconds(30));\r\n    }\r\n\r\n    @AfterClass\r\n    public void tearDown() {\r\n        if (driver != null) driver.quit();\r\n    }\r\n\r\n    @Test\r\n    public void placeSingleOrder() throws InterruptedException {\r\n        System.out.println(\"\\n========== START SINGLE RUN ==========\");\r\n\r\n        try {\r\n            driver.get(START_URL);\r\n            Thread.sleep(2000);\r\n\r\n            // --------- STEP 1: Start Order ---------\r\n            click(By.cssSelector(\"header div.h-full.w-full.gap-4.lg\\\\:flex.hidden.items-center > div > div.flex.gap-2 > button:nth-child(1)\"));\r\n            click(By.xpath(\"//button[.//span[normalize-space()='Pickup'] or normalize-space(.)='Pickup']\"));\r\n            click(By.cssSelector(\"[id*='content-choose_order_time'] button:nth-child(1)\"));\r\n            click(By.cssSelector(\"#category-deals button\"));\r\n\r\n            // --------- STEP 2: Select Items ---------\r\n            click(By.cssSelector(\"label[for='group-0-category-0-item-1']\"));\r\n            clickAddItemModal();\r\n\r\n            click(By.cssSelector(\"label[for='group-1-category-0-item-0']\"));\r\n            clickAddItemModal();\r\n\r\n            Thread.sleep(1500);\r\n            clickProceedToCheckoutFixed();\r\n\r\n            // --------- STEP 3: Final Checkout ---------\r\n            wait.until(ExpectedConditions.urlContains(\"/final-checkout\"));\r\n            Thread.sleep(2000);\r\n\r\n            type(By.xpath(\"//input[contains(@placeholder,'First')]\"), \"Dhruv\");\r\n            type(By.xpath(\"//input[contains(@placeholder,'Last')]\"), \"Raiyani\");\r\n\r\n            // ✅ Stable React mobile field handling\r\n            fillReactInput(\"Enter Your Mobile Number\", \"9737215041\");\r\n\r\n            // ✅ Click Save\r\n            clickIfPresent(By.xpath(\"//button[contains(.,'Save') and @type='submit']\"));\r\n\r\n            // ✅ Wait until Save completes (Payment Method section visible)\r\n            wait.until(ExpectedConditions.visibilityOfElementLocated(\r\n                    By.xpath(\"//*[contains(.,'PAYMENT METHOD') or contains(.,'Payment Method')]\")));\r\n\r\n            // --------- STEP 4: Payment and Confirmation ---------\r\n            if (!clickIfPresent(By.cssSelector(\"input[id*='Card'], button[id*='Card'], div[id*='Card']\"))) {\r\n                clickIfPresent(By.xpath(\"//*[contains(text(),'Cash')]\"));\r\n            }\r\n\r\n            clickIfPresent(By.xpath(\"//button[contains(.,'Proceed') or contains(.,'Place') or contains(.,'Pay')]\"));\r\n\r\n            boolean success = waitUntilAnyTextAppears(new String[]{\r\n                    \"Thank you\", \"Order placed\", \"successfully\", \"Thank You For Ordering\"\r\n            }, 20);\r\n\r\n            if (success) {\r\n                System.out.println(\"✅ Order successfully placed!\");\r\n            } else {\r\n                System.out.println(\"⚠️ No confirmation detected (may have validation error).\");\r\n            }\r\n\r\n        } catch (Exception e) {\r\n            System.out.println(\"❌ Failed to place order: \" + e.getMessage());\r\n        }\r\n\r\n        System.out.println(\"========== END SINGLE RUN ==========\\n\");\r\n    }\r\n\r\n    // ---------------------- Helper Methods ----------------------\r\n\r\n    private void click(By locator) throws InterruptedException {\r\n        WebElement el = wait.until(ExpectedConditions.elementToBeClickable(locator));\r\n        scroll(el);\r\n        safeClick(el);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    private void type(By locator, String value) throws InterruptedException {\r\n        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));\r\n        scroll(el);\r\n        el.clear();\r\n        el.sendKeys(value);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    /** ✅ FIXED: React input + validation triggers */\r\n    private void fillReactInput(String placeholderText, String value) throws InterruptedException {\r\n        By reactInput = By.xpath(\"//input[@placeholder='\" + placeholderText + \"']\");\r\n        WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(reactInput));\r\n        scroll(input);\r\n\r\n        ((JavascriptExecutor) driver).executeScript(\r\n                \"const el = arguments[0];\" +\r\n                        \"const val = arguments[1];\" +\r\n                        \"const proto = Object.getPrototypeOf(el);\" +\r\n                        \"const desc = Object.getOwnPropertyDescriptor(proto, 'value') || Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');\" +\r\n                        \"desc.set.call(el, val);\" +\r\n                        \"el.dispatchEvent(new Event('input', { bubbles: true }));\" +\r\n                        \"el.dispatchEvent(new Event('change', { bubbles: true }));\" +\r\n                        \"el.dispatchEvent(new Event('blur', { bubbles: true }));\",\r\n                input, value\r\n        );\r\n\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n        System.out.println(\"✅ Filled phone (triggered validation): \" + value);\r\n    }\r\n\r\n    private void clickAddItemModal() throws InterruptedException {\r\n        By modalContainer = By.cssSelector(\"div[class*='DealModal_nestedModalBox']\");\r\n        By addButton = By.xpath(\"//div[contains(@class,'DealModal_btnAdd')]/button\");\r\n        wait.until(ExpectedConditions.visibilityOfElementLocated(modalContainer));\r\n        Thread.sleep(700);\r\n        WebElement btn = wait.until(ExpectedConditions.presenceOfElementLocated(addButton));\r\n        scroll(btn);\r\n        ((JavascriptExecutor) driver).executeScript(\"arguments[0].click();\", btn);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    private void clickProceedToCheckoutFixed() throws InterruptedException {\r\n        By btn = By.xpath(\"//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'proceed to checkout')]\");\r\n        List<WebElement> buttons = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(btn));\r\n        WebElement checkoutBtn = buttons.get(buttons.size() - 1);\r\n        scroll(checkoutBtn);\r\n        ((JavascriptExecutor) driver).executeScript(\"arguments[0].click();\", checkoutBtn);\r\n        Thread.sleep(STEP_PAUSE_MS);\r\n    }\r\n\r\n    private boolean clickIfPresent(By locator) throws InterruptedException {\r\n        List<WebElement> els = driver.findElements(locator);\r\n        for (WebElement el : els) {\r\n            if (el.isDisplayed()) {\r\n                scroll(el);\r\n                safeClick(el);\r\n                Thread.sleep(STEP_PAUSE_MS);\r\n                return true;\r\n            }\r\n        }\r\n        return false;\r\n    }\r\n\r\n    private void safeClick(WebElement el) {\r\n        try {\r\n            el.click();\r\n        } catch (Exception e) {\r\n            ((JavascriptExecutor) driver).executeScript(\"arguments[0].click();\", el);\r\n        }\r\n    }\r\n\r\n    private void scroll(WebElement el) {\r\n        ((JavascriptExecutor) driver).executeScript(\r\n                \"arguments[0].scrollIntoView({behavior:'smooth',block:'center'});\", el);\r\n    }\r\n\r\n    /** Waits for text like 'Thank you' or 'Order placed' */\r\n    private boolean waitUntilAnyTextAppears(String[] keywords, int timeoutSec) {\r\n        long end = System.currentTimeMillis() + timeoutSec * 1000L;\r\n        while (System.currentTimeMillis() < end) {\r\n            String body = driver.findElement(By.tagName(\"body\")).getText().toLowerCase();\r\n            for (String k : keywords) {\r\n                if (body.contains(k.toLowerCase())) return true;\r\n            }\r\n            try { Thread.sleep(1000); } catch (InterruptedException ignored) {}\r\n        }\r\n        return false;\r\n    }\r\n}\r\n\r\n",
-      "updated_at": "2026-01-05T08:50:05.266Z"
+      "updated_at": "2026-01-08T10:37:08.667Z"
+    },
+    {
+      "id": "f37346f4-fa23-4add-be48-f38e814adafd",
+      "language": "java",
+      "type": "file",
+      "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "created_at": "2026-01-08T05:14:47.367Z",
+      "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
+      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "name": "Test.java",
+      "content": "\r\npublic class Static1 {\r\n    int x = 500; // Global (Instance variable) \r\n    String s = \"Hello\"; // Global (Instance variable)\r\n    static int y = 100; // static variable\r\n\r\n    // --- CRITICAL CHANGE: Added Main Method ---\r\n    public static void main(String[] args) {\r\n        System.out.println(\"--- Execution Started ---\");\r\n\r\n        // 1. Call static method directly (No object needed)\r\n        method1();\r\n\r\n        // 2. Call non-static method (Requires object instance)\r\n        Static1 obj = new Static1();\r\n        obj.method2();\r\n\r\n        // 3. Access variables\r\n        System.out.println(\"Static y value: \" + y);\r\n        System.out.println(\"Instance x value: \" + obj.x);\r\n    }\r\n\r\n    // static method\r\n    public static void method1(){\r\n        String x = \"Hi\"; // Local variable\r\n        System.out.println(\"Output from method1: \" + x);\r\n    }\r\n\r\n    // non-static method\r\n    public void method2(){\r\n        int i = 100; // local variable\r\n        System.out.println(\"Output from method2: \" + i);\r\n    }\r\n}",
+      "updated_at": "2026-01-09T12:14:53.631Z"
     }
   ],
   "apiCollections": []

@@ -568,6 +568,25 @@ export class LocalProjectService {
     }
 
     // --- Helpers for global lookup (Scanning) ---
+
+    // SYSTEM ONLY: Get all schedules for booting the SchedulerService
+    async getAllSchedulesSystem(): Promise<{ schedule: any, projectId: string }[]> {
+        const projects = await this.readProjectsFile();
+        const allSchedules: { schedule: any, projectId: string }[] = [];
+
+        for (const p of projects.projects) {
+            const data = await this.readProjectData(p.id);
+            if (data.schedules && Array.isArray(data.schedules)) {
+                data.schedules.forEach(s => {
+                    if (s.is_active) {
+                        allSchedules.push({ schedule: s, projectId: p.id });
+                    }
+                });
+            }
+        }
+        return allSchedules;
+    }
+
     async findScriptById(scriptId: string): Promise<{ script: any, projectId: string, project: Project } | null> {
         const projects = await this.readProjectsFile();
         for (const p of projects.projects) {

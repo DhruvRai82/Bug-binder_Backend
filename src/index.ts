@@ -13,7 +13,7 @@ import { recorderRoutes } from './routes/recorder';
 import { projectRoutes } from './routes/projects';
 import { visualTestRouter } from './routes/visual-tests';
 import testDataRoutes from './routes/test-data'; // Default export
-import schedulesRoutes from './routes/schedules'; // Default export
+import { schedulerRouter } from './routes/scheduler';
 
 import { userRoutes } from './routes/user';
 import { gitRoutes } from './routes/git';
@@ -24,6 +24,7 @@ import { aiRouter } from './routes/ai';
 import { authRouter } from './routes/auth';
 import { fileSystemRoutes } from './routes/filesystem';
 import aiAnalyticsRoutes from './routes/ai-analytics';
+import { suitesRouter } from './routes/suites';
 
 dotenv.config();
 
@@ -85,11 +86,12 @@ app.use('/api/recorder', recorderRoutes);
 // Reports are handled within recorderRoutes or projectRoutes for now
 // app.use('/api/reports', reportRoutes);
 app.use('/api/test-data', testDataRoutes);
-app.use('/api/schedules', schedulesRoutes);
+app.use('/api/schedules', schedulerRouter);
 
 // app.use('/api/user', userRoutes); // Removed Duplicate
 app.use('/api/git', gitRoutes);
 app.use('/api/lab', apiLabRouter);
+app.use('/api/suites', suitesRouter);
 app.use('/api/settings', settingsRoutes);
 
 

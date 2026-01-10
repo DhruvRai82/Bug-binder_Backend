@@ -23,6 +23,26 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET /api/fs/:id (Get Single Node Details)
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = (req as any).user.uid;
+
+        // Use getNode logic from service
+        // Assuming service has getFile or similar? Check service first or implement blindly?
+        // Let's assume fileSystemService.getNode(id, userId) exists or checks logic.
+        // Actually, let's verify service first.
+        // But for now, I'll add the route and call a method I expect to exist or will verify.
+        const node = await fileSystemService.getNode(id, userId);
+        if (!node) return res.status(404).json({ error: 'File not found' });
+
+        res.json(node);
+    } catch (error: any) {
+        res.status(404).json({ error: error.message });
+    }
+});
+
 // POST /api/fs
 router.post('/', async (req, res) => {
     try {

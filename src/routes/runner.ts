@@ -77,12 +77,16 @@ router.delete('/run/:id', async (req, res) => {
 // Batch Execution (Test Orchestrator)
 router.post('/batch-execute', async (req, res) => {
     try {
-        const { projectId, fileIds } = req.body;
+        const { projectId, fileIds, config } = req.body;
+
         if (!projectId || !fileIds || !Array.isArray(fileIds)) {
-            return res.status(400).json({ error: 'projectId and fileIds (array) are required' });
+            return res.status(400).json({ error: 'Missing projectId or fileIds' });
         }
 
-        const result = await batchRunnerService.executeBatch(projectId, fileIds);
+        // 3. Trigger Batch Run (Async)
+        // Note: executeBatch is async but we might want to await it if it's "fire and forget"?
+        // BatchRunnerService returns { runId, status } immediately-ish.
+        const result = await batchRunnerService.executeBatch(projectId, fileIds, config);
         res.json(result);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -102,12 +106,12 @@ router.post('/scan', async (req, res) => {
         if (!userId) return res.status(401).json({ error: 'User not authenticated' });
 
         // 1. Scan Disk -> Local DB
-        const { localProjectService } = await import('../services/LocalProjectService.js');
+        const { localProjectService } = await import('../services/LocalProjectService');
         const files = await localProjectService.rescanFiles(projectId);
 
         // 2. Sync Local -> Remote (Firestore)
         // This ensures GET /api/fs (which reads remote) sees the files
-        const { projectService } = await import('../services/ProjectService.js');
+        const { projectService } = await import('../services/ProjectService');
         const remoteFiles = await projectService.getFSNodes(projectId, userId);
 
         let syncedCount = 0;
@@ -172,7 +176,7 @@ router.get('/run/:runId', async (req, res) => {
 
             // 1. Try Local First (Fastest)
             // Dynamic import to avoid circular dep issues if any, though likely fine here
-            const { localProjectService } = await import('../services/LocalProjectService.js');
+            const { localProjectService } = await import('../services/LocalProjectService');
             const localFound = await localProjectService.findTestRunById(runId);
 
             if (localFound) {

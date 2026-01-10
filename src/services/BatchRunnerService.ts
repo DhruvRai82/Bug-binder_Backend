@@ -56,7 +56,7 @@ export class BatchRunnerService {
         return resolvedPaths;
     }
 
-    async executeBatch(projectId: string, fileIds: string[]): Promise<BatchRunResult> {
+    async executeBatch(projectId: string, fileIds: string[], config?: any): Promise<BatchRunResult> {
         // 1. Create Run Record
         const runId = await testRunService.createRun(projectId, fileIds);
 
@@ -66,7 +66,7 @@ export class BatchRunnerService {
             testRunService.appendLog(runId, projectId, msg).catch(e => console.error(e));
         };
 
-        log(`[BatchRunner] Starting Run ${runId}`);
+        log(`[BatchRunner] Starting Run ${runId} with config: ${JSON.stringify(config)}`);
 
         // Use a temp dir inside backend root to ensure node_modules resolution works
         const tempBasePath = path.join(process.cwd(), 'temp_batch_runs', runId);
@@ -183,22 +183,55 @@ export class BatchRunnerService {
                 try {
                     await Promise.all([runJava(), runPython()]); // Wait for non-playwright
 
-                    // Handle Playwright if needed (For now, omitting Playwright detailed integration for brevity, assuming similar pattern)
-                    // If Playwright exists, we should probably run it too.
+                    // Handle Playwright
                     if (playwrightFiles.length > 0) {
                         log(`[BatchRunner] Triggering Playwright for ${playwrightFiles.length} files...`);
                         const reportFile = path.join(tempBasePath, 'report.json');
-                        // ... Playwright spawn logic ...
-                        // For simplicity in this 'Improvement' step, let's mark as skipped if not implemented fully via TestRunService yet
-                        // But we should at least run it.
-                        const command = `npx playwright test ${playwrightFiles.map(p => `"${p}"`).join(' ')} --headed --reporter=json`;
-                        // Blocking for simplicity for now to update status correctly at end
-                        // actually spawn is async.
-                        // We will assume Playwright runs in parallel and we don't wait for it to close this function?
-                        // No, we want to update 'completed' status.
-                        // Let's defer Playwright full integration to next step if complex.
-                        // Just running it:
-                        const child = spawn(command, [], { shell: true, env: { ...process.env, CI: 'true', PLAYWRIGHT_JSON_OUTPUT_NAME: reportFile } });
+
+                        // Construct Command based on Config
+                        // Config: { environment: 'local'|'staging'|'prod', browser: 'chrome'|'firefox'|'edge', headless: boolean }
+
+                        let browserFlag = '';
+                        if (config?.browser) {
+                            // Map UI browser names to Playwright Project names or Browser Types
+                            // Provided UI: chrome, firefox, edge
+                            // Playwright Standard Projects: chromium, firefox, webkit, Mobile Chrome, etc.
+                            // If user is running generic, we can map:
+                            const browserMap: Record<string, string> = {
+                                'chrome': 'chromium',
+                                'firefox': 'firefox',
+                                'edge': 'webkit' // Fallback or if they have 'Microsoft Edge' project? 
+                                // Actually 'msedge' is a channel, not a project usually unless defined.
+                                // Safer: 'chromium' unless we know 'edge' is installed.
+                                // Let's try --browser if no config, but --project is standard.
+                                // If we don't know the config, let's just assume defaults map loosely to browserType.
+                            };
+                            const project = browserMap[config.browser] || 'chromium';
+                            // browserFlag = `--project=${project}`; 
+                            // WARNING: --project only works if configured in playwright.config.ts!
+                            // If no config, it fails.
+                            // Default behavior: just run.
+                            // To force browser without config: --browser=chromium
+                            browserFlag = `--browser=${project}`;
+                        }
+
+                        const headlessFlag = config?.headless ? '' : '--headed';
+
+                        // Environment Variables
+                        const envVars = {
+                            ...process.env,
+                            CI: 'true',
+                            PLAYWRIGHT_JSON_OUTPUT_NAME: reportFile,
+                            TEST_ENV: config?.environment || 'local', // Pass as generic TEST_ENV
+                            BASE_URL: config?.environment === 'prod' ? 'https://production.com' : 'http://localhost:3000' // Example mapping, user scripts usually handle this
+                        };
+
+                        const command = `npx playwright test ${playwrightFiles.map(p => `"${p}"`).join(' ')} ${headlessFlag} ${browserFlag} --reporter=json`;
+
+                        log(`[BatchRunner] Command: ${command} | Env: ${config?.environment}`);
+
+                        const child = spawn(command, [], { shell: true, env: envVars });
+
                         child.on('close', async (code) => {
                             log(`[BatchRunner] Playwright finished with code ${code}`);
                             // Once EVERYTHING is done:

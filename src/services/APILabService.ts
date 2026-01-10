@@ -81,49 +81,37 @@ export class APILabService {
     async updateRequest(id: string, updates: any, projectId: string) {
         if (!projectId) throw new Error("ProjectId required");
 
-        // We don't know the collectionId easily from just Request ID without searching...
-        // But wait, APIs often pass collectionId?
-        // The original code iterated ALL collections to find the request.
-        // We have to search or require collectionId in the update payload.
-        // The route passes { projectId, ...updates }. 'updates' might contain 'collectionId'?
-        // The Frontend probably knows where the request belongs.
+        // Iterate through all collections in the project to find the request
+        const colsSnapshot = await this.getColsRef(projectId).get();
 
-        // Fallback: Query Group?
-        // OR: Iterate like before (Slow but works for small scale).
+        for (const colDoc of colsSnapshot.docs) {
+            const reqRef = colDoc.ref.collection('requests').doc(id);
+            const reqSnap = await reqRef.get();
 
-        // Let's rely on finding it.
-        // Since Requests are subcollection of 'api_collections', we can use Collection Group Query restricted to 'requests'?
-        // No, 'requests' are subcollection of specific col.
-
-        // Better: Query all collections, check requests.
-        // Optimization: In real app, Frontend should send collectionId.
-
-        // Start simple: Find parent collection.
-        const cols = await this.getCollections(projectId);
-        for (const col of cols) {
-            const req = col.requests.find((r: any) => r.id === id);
-            if (req) {
-                // Found it.
-                const reqRef = this.getColsRef(projectId).doc(col.id).collection('requests').doc(id);
+            if (reqSnap.exists) {
                 await reqRef.update(updates);
-                return { ...req, ...(updates as any) };
+                return { id, ...reqSnap.data(), ...updates };
             }
         }
+
         throw new Error('Request not found');
     }
 
     async deleteRequest(id: string, projectId: string) {
         if (!projectId) throw new Error("ProjectId required");
 
-        // Similar search strategy
-        const cols = await this.getCollections(projectId);
-        for (const col of cols) {
-            const req = col.requests.find((r: any) => r.id === id);
-            if (req) {
-                await this.getColsRef(projectId).doc(col.id).collection('requests').doc(id).delete();
+        const colsSnapshot = await this.getColsRef(projectId).get();
+
+        for (const colDoc of colsSnapshot.docs) {
+            const reqRef = colDoc.ref.collection('requests').doc(id);
+            const reqSnap = await reqRef.get();
+
+            if (reqSnap.exists) {
+                await reqRef.delete();
                 return;
             }
         }
+
         throw new Error('Request not found');
     }
 }
