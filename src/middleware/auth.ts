@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { auth } from '../firebase';
-import { userService } from '../services/UserService';
+import { userService } from '../services/persistence/UserService';
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {

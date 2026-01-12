@@ -1305,89 +1305,57 @@
       "bugs": []
     }
   ],
-  "scripts": [],
+  "scripts": [
+    {
+      "name": "Open Chrome",
+      "module": "Test ",
+      "steps": [
+        {
+          "command": "open",
+          "target": "https://google.com",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "command": "click",
+          "target": "xpath=/html/body/div[2]/div[4]/form/div",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "command": "click",
+          "target": "css=div.niO4u.VDgVie.SlP8xc",
+          "targets": [],
+          "value": ""
+        }
+      ],
+      "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "user_id": "test-user-id",
+      "id": "dlpMcuvoZc",
+      "createdAt": "2026-01-12T05:39:15.883Z",
+      "updatedAt": "2026-01-12T05:39:15.883Z"
+    }
+  ],
   "reports": [],
   "testRuns": [
     {
-      "id": "0135fb25-a29b-48fc-9869-67af442fca31",
+      "id": "1fa61805-5fa5-47a9-99fc-236a50893dc4",
       "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
       "status": "completed",
-      "startTime": "2026-01-09T12:09:31.188Z",
+      "startTime": "2026-01-10T03:51:39.152Z",
       "triggeredBy": "manual",
       "files": [
-        "f37346f4-fa23-4add-be48-f38e814adafd"
-      ],
-      "results": [
-        {
-          "file": "Test.java",
-          "status": "passed",
-          "logs": [
-            "--- Execution Started ---\r\n",
-            "Output from method1: Hi\r\n",
-            "Output from method2: 100\r\n",
-            "Static y value: 100\r\n",
-            "Instance x value: 500\r\n"
-          ]
-        }
-      ],
-      "logs": [
-        "[2026-01-09T12:09:31.198Z] [BatchRunner] Starting Run 0135fb25-a29b-48fc-9869-67af442fca31 with config: {\"environment\":\"local\",\"browser\":\"chrome\",\"headless\":false,\"parallel\":1}",
-        "[2026-01-09T12:09:31.231Z] [BatchRunner] Breakdown: 1 Java, 0 Python, 0 Playwright",
-        "[2026-01-09T12:09:31.232Z] [BatchRunner] Executing 1 Java files...",
-        "[2026-01-09T12:09:31.232Z] Executing Java: Test.java",
-        "[2026-01-09T12:09:33.731Z] Finished Java: Test.java (PASS)"
-      ],
-      "endTime": "2026-01-09T12:09:33.731Z"
-    },
-    {
-      "id": "0eba4302-89ad-48d9-b99e-153f15d926ed",
-      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "status": "completed",
-      "startTime": "2026-01-09T11:52:36.476Z",
-      "triggeredBy": "manual",
-      "files": [
-        "541319ef-6599-4167-b59d-f082ae355697"
+        "541319ef-6599-4167-b59d-f082ae355697",
+        "081dd0bc-266e-4c80-a13d-55ca84579f9a"
       ],
       "results": [
         {
           "file": "LoginTest.java",
           "status": "failed",
           "logs": [
-            "[Details] Jan 09, 2026 5:22:39 PM org.testng.log4testng.Logger info\r\nINFO: [TestNG] Running:\n  Command line suite\n\r\n",
+            "[Details] Jan 10, 2026 9:21:43 AM org.testng.log4testng.Logger info\r\nINFO: [TestNG] Running:\n  Command line suite\n\r\n",
             "\n===============================================\nCommand line suite\nTotal tests run: 1, Passes: 0, Failures: 0, Skips: 1\nConfiguration Failures: 1, Skips: 1\n===============================================\n\r\n"
           ]
-        }
-      ],
-      "logs": [
-        "[2026-01-09T11:52:36.480Z] [BatchRunner] Starting Run 0eba4302-89ad-48d9-b99e-153f15d926ed with config: {\"environment\":\"local\",\"browser\":\"chrome\",\"headless\":true,\"parallel\":1}",
-        "[2026-01-09T11:52:36.514Z] [BatchRunner] Breakdown: 1 Java, 0 Python, 0 Playwright",
-        "[2026-01-09T11:52:36.514Z] [BatchRunner] Executing 1 Java files...",
-        "[2026-01-09T11:52:36.515Z] Executing Java: LoginTest.java",
-        "[2026-01-09T11:52:39.709Z] Finished Java: LoginTest.java (FAIL)"
-      ],
-      "endTime": "2026-01-09T11:52:39.709Z"
-    },
-    {
-      "id": "28cb3fe0-eabe-4716-87cc-517f761a5258",
-      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "status": "completed",
-      "startTime": "2026-01-09T11:51:44.599Z",
-      "triggeredBy": "manual",
-      "files": [
-        "081dd0bc-266e-4c80-a13d-55ca84579f9a",
-        "f37346f4-fa23-4add-be48-f38e814adafd"
-      ],
-      "results": [
-        {
-          "file": "Test.java",
-          "status": "passed",
-          "logs": [
-            "--- Execution Started ---\r\n",
-            "Output from method1: Hi\r\n",
-            "Output from method2: 100\r\n",
-            "Static y value: 100\r\n",
-            "Instance x value: 500\r\n"
-          ]
         },
         {
           "file": "Google_home.py",
@@ -1398,159 +1366,30 @@
         }
       ],
       "logs": [
-        "[2026-01-09T11:51:44.610Z] [BatchRunner] Starting Run 28cb3fe0-eabe-4716-87cc-517f761a5258 with config: {\"environment\":\"local\",\"browser\":\"chrome\",\"headless\":false,\"parallel\":1}",
-        "[2026-01-09T11:51:44.628Z] [BatchRunner] Breakdown: 1 Java, 1 Python, 0 Playwright",
-        "[2026-01-09T11:51:44.628Z] [BatchRunner] Executing 1 Java files...",
-        "[2026-01-09T11:51:44.629Z] Executing Java: Test.java",
-        "[2026-01-09T11:51:44.658Z] [BatchRunner] Executing 1 Python files...",
-        "[2026-01-09T11:51:44.660Z] Executing Python: Google_home.py",
-        "[2026-01-09T11:51:46.900Z] Finished Java: Test.java (PASS)",
-        "[2026-01-09T11:51:55.601Z] Finished Python: Google_home.py (PASS)"
+        "[2026-01-10T03:51:39.167Z] [BatchRunner] Starting Run 1fa61805-5fa5-47a9-99fc-236a50893dc4 with config: {\"environment\":\"local\",\"browser\":\"chrome\",\"headless\":false,\"parallel\":1}",
+        "[2026-01-10T03:51:39.202Z] [BatchRunner] Breakdown: 1 Java, 1 Python, 0 Playwright",
+        "[2026-01-10T03:51:39.203Z] [BatchRunner] Executing 1 Java files...",
+        "[2026-01-10T03:51:39.204Z] Executing Java: LoginTest.java",
+        "[2026-01-10T03:51:39.237Z] [BatchRunner] Executing 1 Python files...",
+        "[2026-01-10T03:51:39.239Z] Executing Python: Google_home.py",
+        "[2026-01-10T03:51:43.597Z] Finished Java: LoginTest.java (FAIL)",
+        "[2026-01-10T03:51:51.280Z] Finished Python: Google_home.py (PASS)"
       ],
-      "endTime": "2026-01-09T11:51:55.601Z"
-    },
-    {
-      "id": "67a3686e-4281-49b3-b6d6-0df6c31202fa",
-      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "status": "completed",
-      "startTime": "2026-01-09T09:47:13.382Z",
-      "triggeredBy": "manual",
-      "files": [
-        "081dd0bc-266e-4c80-a13d-55ca84579f9a"
-      ],
-      "results": [
-        {
-          "file": "Google_home.py",
-          "status": "passed",
-          "logs": [
-            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
-          ]
-        }
-      ],
-      "logs": [
-        "[2026-01-09T09:47:13.392Z] [BatchRunner] Starting Run 67a3686e-4281-49b3-b6d6-0df6c31202fa",
-        "[2026-01-09T09:47:13.415Z] [BatchRunner] Breakdown: 0 Java, 1 Python, 0 Playwright",
-        "[2026-01-09T09:47:13.415Z] [BatchRunner] Executing 1 Python files...",
-        "[2026-01-09T09:47:13.416Z] Executing Python: Google_home.py",
-        "[2026-01-09T09:47:24.189Z] Finished Python: Google_home.py (PASS)"
-      ],
-      "endTime": "2026-01-09T09:47:24.189Z"
-    },
-    {
-      "id": "0c119453-7b26-420d-8a5f-05a650b28016",
-      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "status": "completed",
-      "startTime": "2026-01-09T09:46:52.610Z",
-      "triggeredBy": "manual",
-      "files": [
-        "081dd0bc-266e-4c80-a13d-55ca84579f9a"
-      ],
-      "results": [
-        {
-          "file": "Google_home.py",
-          "status": "passed",
-          "logs": [
-            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
-          ]
-        }
-      ],
-      "logs": [
-        "[2026-01-09T09:46:52.617Z] [BatchRunner] Starting Run 0c119453-7b26-420d-8a5f-05a650b28016",
-        "[2026-01-09T09:46:52.637Z] [BatchRunner] Breakdown: 0 Java, 1 Python, 0 Playwright",
-        "[2026-01-09T09:46:52.637Z] [BatchRunner] Executing 1 Python files...",
-        "[2026-01-09T09:46:52.638Z] Executing Python: Google_home.py",
-        "[2026-01-09T09:47:03.497Z] Finished Python: Google_home.py (PASS)"
-      ],
-      "endTime": "2026-01-09T09:47:03.498Z"
-    },
-    {
-      "id": "e3108942-0872-4216-9bf2-bf7f49448afc",
-      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "status": "completed",
-      "startTime": "2026-01-09T08:36:10.876Z",
-      "triggeredBy": "manual",
-      "files": [
-        "081dd0bc-266e-4c80-a13d-55ca84579f9a",
-        "f37346f4-fa23-4add-be48-f38e814adafd"
-      ],
-      "results": [
-        {
-          "file": "Test.java",
-          "status": "passed",
-          "logs": [
-            "--- Execution Started ---\r\n",
-            "Output from method1: Hi\r\n",
-            "Output from method2: 100\r\n",
-            "Static y value: 100\r\n",
-            "Instance x value: 500\r\n"
-          ]
-        },
-        {
-          "file": "Google_home.py",
-          "status": "passed",
-          "logs": [
-            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
-          ]
-        }
-      ],
-      "logs": [
-        "[2026-01-09T08:36:10.892Z] [BatchRunner] Starting Run e3108942-0872-4216-9bf2-bf7f49448afc",
-        "[2026-01-09T08:36:10.932Z] [BatchRunner] Breakdown: 1 Java, 1 Python, 0 Playwright",
-        "[2026-01-09T08:36:10.933Z] [BatchRunner] Executing 1 Java files...",
-        "[2026-01-09T08:36:10.933Z] Executing Java: Test.java",
-        "[2026-01-09T08:36:10.970Z] [BatchRunner] Executing 1 Python files...",
-        "[2026-01-09T08:36:10.971Z] Executing Python: Google_home.py",
-        "[2026-01-09T08:36:13.175Z] Finished Java: Test.java (PASS)",
-        "[2026-01-09T08:36:26.896Z] Finished Python: Google_home.py (PASS)"
-      ],
-      "endTime": "2026-01-09T08:36:26.896Z"
-    },
-    {
-      "id": "f88bec23-568a-4018-b06f-098edbf7b592",
-      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "status": "completed",
-      "startTime": "2026-01-06T10:11:36.563Z",
-      "triggeredBy": "manual",
-      "files": [
-        "081dd0bc-266e-4c80-a13d-55ca84579f9a"
-      ],
-      "results": [
-        {
-          "file": "Google_home.py",
-          "status": "passed",
-          "logs": [
-            "Browser opened to Google.\r\nBrowser closed successfully.\r\n"
-          ]
-        }
-      ],
-      "logs": [
-        "[2026-01-06T10:11:36.577Z] [BatchRunner] Starting Run f88bec23-568a-4018-b06f-098edbf7b592",
-        "[2026-01-06T10:11:36.594Z] [BatchRunner] Breakdown: 0 Java, 1 Python, 0 Playwright",
-        "[2026-01-06T10:11:36.595Z] [BatchRunner] Executing 1 Python files...",
-        "[2026-01-06T10:11:36.595Z] Executing Python: Google_home.py",
-        "[2026-01-06T10:11:50.013Z] Finished Python: Google_home.py (PASS)"
-      ],
-      "endTime": "2026-01-06T10:11:50.014Z"
-    },
-    {
-      "id": "a1bf678d-07b9-4975-aade-d01b9371a2c0",
-      "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
-      "status": "completed",
-      "startTime": "2026-01-02T07:54:53.092Z",
-      "triggeredBy": "manual",
-      "files": [
-        "gSzlX3dqKY"
-      ],
-      "results": [],
-      "logs": [],
-      "script_id": "gSzlX3dqKY",
-      "trigger_source": "manual",
-      "started_at": "2026-01-02T07:54:53.105Z",
-      "completed_at": "2026-01-02T07:54:56.281Z",
-      "duration_ms": 3192
+      "endTime": "2026-01-10T03:51:51.280Z"
     }
   ],
-  "schedules": [],
+  "schedules": [
+    {
+      "suite_id": "11f67ee6-8236-4b63-bf10-4b4b1ea9e7d5",
+      "cron_expression": "0 8 * * *",
+      "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
+      "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
+      "name": "Run 1",
+      "is_active": true,
+      "id": "Qd37sjYuBP",
+      "created_at": "2026-01-12T06:12:55.733Z"
+    }
+  ],
   "datasets": [
     {
       "name": "Mock Users.json",
@@ -1573,7 +1412,7 @@
       "user_id": "maTXKvjwehP7moFBH9fmG9bTCeI3",
       "type": "file",
       "content": "from selenium import webdriver\r\nfrom selenium.webdriver.chrome.service import Service\r\nimport time\r\n\r\n# 1. Initialize the Chrome Driver\r\ndriver = webdriver.Chrome()\r\n\r\ntry:\r\n    # 2. Open Google\r\n    driver.get(\"https://www.google.com\")\r\n    print(\"Browser opened to Google.\")\r\n\r\n    # 3. Wait for 5 seconds\r\n    time.sleep(5)\r\n\r\nfinally:\r\n    # 4. Exit/Close the browser\r\n    driver.quit()\r\n    print(\"Browser closed successfully.\")",
-      "updated_at": "2026-01-05T08:53:07.288Z"
+      "updated_at": "2026-01-10T04:24:05.743Z"
     },
     {
       "id": "389a7a06-f284-486e-a5aa-7cb17120a82f",
@@ -1595,8 +1434,8 @@
       "parent_id": "389a7a06-f284-486e-a5aa-7cb17120a82f",
       "project_id": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
       "name": "LoginTest.java",
-      "updated_at": "2026-01-05T08:55:10.190Z",
-      "content": "\r\nimport io.github.bonigarcia.wdm.WebDriverManager;\r\nimport org.openqa.selenium.*;\r\nimport org.openqa.selenium.firefox.FirefoxDriver;\r\nimport org.openqa.selenium.firefox.FirefoxOptions;\r\nimport org.openqa.selenium.support.ui.ExpectedConditions;\r\nimport org.openqa.selenium.support.ui.WebDriverWait;\r\nimport org.testng.annotations.*;\r\n\r\nimport java.time.Duration;\r\n\r\npublic class LoginTest {\r\n\r\n    WebDriver driver;\r\n    WebDriverWait wait;\r\n\r\n    // 🔹 URL of your login page\r\n    String url = \"https://admin.foodchow.com/RestaurantLogin\";\r\n    // If you’re testing your demo, replace with your exact login URL.\r\n\r\n    // 🔹 Locators (from your HTML)\r\n    By email = By.id(\"txtEmailId\");\r\n    By password = By.name(\"Password\"); // safer than duplicate id\r\n    By loginBtn = By.xpath(\"//button[contains(.,'Login') or contains(.,'Sign in')]\");\r\n    By logoutBtn = By.id(\"btn_logout\");\r\n\r\n    // 🔹 Data array: { email, password, expectedSuccess }\r\n    Object[][] testData = {\r\n            {\"testing1@tenacioustechies.com.au\", \"123456\", true},\r\n            {\"testing@tenacioustechies.com\", \"123456\", true},\r\n            {\"testing@tenacioustechies.com\", \"wrongpass\", false},\r\n            {\"invalidemail\", \"123456\", false},\r\n            {\"unknown@tenacioustechies.com\", \"123456\", false}\r\n    };\r\n\r\n    @BeforeClass\r\n    public void setup() {\r\n        WebDriverManager.firefoxdriver().setup();\r\n        FirefoxOptions options = new FirefoxOptions();\r\n        // options.addArguments(\"-headless\"); // uncomment to run without UI\r\n        driver = new FirefoxDriver(options);\r\n        wait = new WebDriverWait(driver, Duration.ofSeconds(10));\r\n        driver.manage().window().maximize();\r\n    }\r\n\r\n    @AfterClass\r\n    public void teardown() {\r\n        driver.quit();\r\n    }\r\n\r\n    @Test\r\n    public void testLoginArray() throws InterruptedException {\r\n        for (Object[] data : testData) {\r\n            String emailData = (String) data[0];\r\n            String passData = (String) data[1];\r\n            boolean expectedSuccess = (Boolean) data[2];\r\n\r\n            System.out.println(\"\\nTrying login: \" + emailData);\r\n\r\n            driver.get(url);\r\n            wait.until(ExpectedConditions.visibilityOfElementLocated(email)).clear();\r\n            driver.findElement(email).sendKeys(emailData);\r\n\r\n            WebElement pass = wait.until(ExpectedConditions.visibilityOfElementLocated(password));\r\n            pass.clear();\r\n            pass.sendKeys(passData);\r\n\r\n            // Click login or press enter if no button\r\n            if (driver.findElements(loginBtn).size() > 0)\r\n                driver.findElement(loginBtn).click();\r\n            else\r\n                pass.sendKeys(Keys.ENTER);\r\n\r\n            // Wait a bit for page reaction\r\n            Thread.sleep(2000);\r\n\r\n            boolean loggedIn = driver.findElements(logoutBtn).size() > 0;\r\n\r\n            if (loggedIn) {\r\n                System.out.println(\"✅ Logged in successfully.\");\r\n                if (!expectedSuccess)\r\n                    System.out.println(\"❌ Expected failure but login succeeded.\");\r\n                // Logout\r\n                driver.findElement(logoutBtn).click();\r\n                Thread.sleep(1000);\r\n            } else {\r\n                System.out.println(\"❌ Login failed.\");\r\n                if (expectedSuccess)\r\n                    System.out.println(\"❌ Expected success but login failed.\");\r\n            }\r\n        }\r\n    }\r\n}\r\n"
+      "content": "\r\nimport io.github.bonigarcia.wdm.WebDriverManager;\r\nimport org.openqa.selenium.*;\r\nimport org.openqa.selenium.firefox.FirefoxDriver;\r\nimport org.openqa.selenium.firefox.FirefoxOptions;\r\nimport org.openqa.selenium.support.ui.ExpectedConditions;\r\nimport org.openqa.selenium.support.ui.WebDriverWait;\r\nimport org.testng.annotations.*;\r\n\r\nimport java.time.Duration;\r\n\r\npublic class LoginTest {\r\n\r\n    WebDriver driver;\r\n    WebDriverWait wait;\r\n\r\n    // 🔹 URL of your login page\r\n    String url = \"https://admin.foodchow.com/RestaurantLogin\";\r\n    // If you’re testing your demo, replace with your exact login URL.\r\n\r\n    // 🔹 Locators (from your HTML)\r\n    By email = By.id(\"txtEmailId\");\r\n    By password = By.name(\"Password\"); // safer than duplicate id\r\n    By loginBtn = By.xpath(\"//button[contains(.,'Login') or contains(.,'Sign in')]\");\r\n    By logoutBtn = By.id(\"btn_logout\");\r\n\r\n    // 🔹 Data array: { email, password, expectedSuccess }\r\n    Object[][] testData = {\r\n            {\"testing1@tenacioustechies.com.au\", \"123456\", true},\r\n            {\"testing@tenacioustechies.com\", \"123456\", true},\r\n            {\"testing@tenacioustechies.com\", \"wrongpass\", false},\r\n            {\"invalidemail\", \"123456\", false},\r\n            {\"unknown@tenacioustechies.com\", \"123456\", false}\r\n    };\r\n\r\n    @BeforeClass\r\n    public void setup() {\r\n        WebDriverManager.firefoxdriver().setup();\r\n        FirefoxOptions options = new FirefoxOptions();\r\n        // options.addArguments(\"-headless\"); // uncomment to run without UI\r\n        driver = new FirefoxDriver(options);\r\n        wait = new WebDriverWait(driver, Duration.ofSeconds(10));\r\n        driver.manage().window().maximize();\r\n    }\r\n\r\n    @AfterClass\r\n    public void teardown() {\r\n        driver.quit();\r\n    }\r\n\r\n    @Test\r\n    public void testLoginArray() throws InterruptedException {\r\n        for (Object[] data : testData) {\r\n            String emailData = (String) data[0];\r\n            String passData = (String) data[1];\r\n            boolean expectedSuccess = (Boolean) data[2];\r\n\r\n            System.out.println(\"\\nTrying login: \" + emailData);\r\n\r\n            driver.get(url);\r\n            wait.until(ExpectedConditions.visibilityOfElementLocated(email)).clear();\r\n            driver.findElement(email).sendKeys(emailData);\r\n\r\n            WebElement pass = wait.until(ExpectedConditions.visibilityOfElementLocated(password));\r\n            pass.clear();\r\n            pass.sendKeys(passData);\r\n\r\n            // Click login or press enter if no button\r\n            if (driver.findElements(loginBtn).size() > 0)\r\n                driver.findElement(loginBtn).click();\r\n            else\r\n                pass.sendKeys(Keys.ENTER);\r\n\r\n            // Wait a bit for page reaction\r\n            Thread.sleep(2000);\r\n\r\n            boolean loggedIn = driver.findElements(logoutBtn).size() > 0;\r\n\r\n            if (loggedIn) {\r\n                System.out.println(\"✅ Logged in successfully.\");\r\n                if (!expectedSuccess)\r\n                    System.out.println(\"❌ Expected failure but login succeeded.\");\r\n                // Logout\r\n                driver.findElement(logoutBtn).click();\r\n                Thread.sleep(1000);\r\n            } else {\r\n                System.out.println(\"❌ Login failed.\");\r\n                if (expectedSuccess)\r\n                    System.out.println(\"❌ Expected success but login failed.\");\r\n            }\r\n        }\r\n    }\r\n}\r\n",
+      "updated_at": "2026-01-10T04:14:42.278Z"
     },
     {
       "id": "7d3e4aac-7b96-4f25-bad0-91eb4b8ddfc3",
@@ -1630,7 +1469,7 @@
       "projectId": "0a46efff-cf2f-40b6-94e7-ed16944a628b",
       "name": "Test.java",
       "content": "\r\npublic class Static1 {\r\n    int x = 500; // Global (Instance variable) \r\n    String s = \"Hello\"; // Global (Instance variable)\r\n    static int y = 100; // static variable\r\n\r\n    // --- CRITICAL CHANGE: Added Main Method ---\r\n    public static void main(String[] args) {\r\n        System.out.println(\"--- Execution Started ---\");\r\n\r\n        // 1. Call static method directly (No object needed)\r\n        method1();\r\n\r\n        // 2. Call non-static method (Requires object instance)\r\n        Static1 obj = new Static1();\r\n        obj.method2();\r\n\r\n        // 3. Access variables\r\n        System.out.println(\"Static y value: \" + y);\r\n        System.out.println(\"Instance x value: \" + obj.x);\r\n    }\r\n\r\n    // static method\r\n    public static void method1(){\r\n        String x = \"Hi\"; // Local variable\r\n        System.out.println(\"Output from method1: \" + x);\r\n    }\r\n\r\n    // non-static method\r\n    public void method2(){\r\n        int i = 100; // local variable\r\n        System.out.println(\"Output from method2: \" + i);\r\n    }\r\n}",
-      "updated_at": "2026-01-09T12:14:53.631Z"
+      "updated_at": "2026-01-09T12:14:53.236Z"
     }
   ],
   "apiCollections": []

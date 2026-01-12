@@ -4,27 +4,28 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import path from 'path';
-import { recorderService } from './services/RecorderService';
-import { schedulerService } from './services/SchedulerService';
+import { recorderService } from './services/execution/RecorderService';
+import { schedulerService } from './services/execution/SchedulerService';
 
 // Import Routes (checking named vs default exports)
-import { scriptRoutes } from './routes/scripts'; // Was testRoutes, now scriptRoutes
-import { recorderRoutes } from './routes/recorder';
-import { projectRoutes } from './routes/projects';
-import { visualTestRouter } from './routes/visual-tests';
-import testDataRoutes from './routes/test-data'; // Default export
-import { schedulerRouter } from './routes/scheduler';
+// Import Routes (checking named vs default exports)
+import { scriptRoutes } from './routes/persistence/scripts';
+import { recorderRoutes } from './routes/execution/recorder';
+import { projectRoutes } from './routes/persistence/projects';
+import { visualTestRouter } from './routes/analysis/visual-tests';
+import testDataRoutes from './routes/persistence/test-data';
+import { schedulerRouter } from './routes/execution/scheduler';
 
-import { userRoutes } from './routes/user';
-import { gitRoutes } from './routes/git';
-import { apiLabRouter } from './routes/api-lab';
-import { runnerRoutes } from './routes/runner';
-import { settingsRoutes } from './routes/settings';
-import { aiRouter } from './routes/ai';
-import { authRouter } from './routes/auth';
-import { fileSystemRoutes } from './routes/filesystem';
-import aiAnalyticsRoutes from './routes/ai-analytics';
-import { suitesRouter } from './routes/suites';
+import { userRoutes } from './routes/persistence/user';
+import { gitRoutes } from './routes/integration/git';
+import { apiLabRouter } from './routes/integration/api-lab';
+import { runnerRoutes } from './routes/execution/runner';
+import { settingsRoutes } from './routes/persistence/settings';
+import { aiRouter } from './routes/ai/core';
+import { authRouter } from './routes/integration/auth';
+import { fileSystemRoutes } from './routes/persistence/filesystem';
+import aiAnalyticsRoutes from './routes/ai/analytics';
+import { suitesRouter } from './routes/persistence/suites';
 
 dotenv.config();
 
@@ -45,14 +46,16 @@ app.use(express.json());
 
 // Request Logging Middleware
 app.use((req, res, next) => {
-    console.log(`[API Request] ${req.method} ${req.url}`);
-    if (Object.keys(req.body).length > 0) {
-        // console.log('[API Body]', JSON.stringify(req.body, null, 2)); // Verbose
-    }
+    // console.log(`[API Request] ${req.method} ${req.url}`); // Removed duplicate
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        console.log(`[API Response] ${req.method} ${req.url} ${res.statusCode} (${duration}ms)`);
+        let statusColor = '';
+        if (res.statusCode >= 500) statusColor = '❌';
+        else if (res.statusCode >= 400) statusColor = '⚠️';
+        else statusColor = '✅';
+
+        console.log(`[HTTP] ${statusColor} ${req.method} ${req.url} -> ${res.statusCode} (${duration}ms)`);
     });
     next();
 });
