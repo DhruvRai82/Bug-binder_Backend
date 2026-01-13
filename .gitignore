@@ -13,6 +13,7 @@ data/
 !data/.keep
 ai_debug.log
 *.log
+service-account.json
 
 # Debug
 debug_*.js
