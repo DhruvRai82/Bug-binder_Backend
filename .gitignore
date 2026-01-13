@@ -1,10 +1,21 @@
+
+# Dependencies
 node_modules
 dist
-.env
-*.log
-coverage
-push_error.log
-storage
-push_error_2.log
-service-account.json
 python_env
+venv
+
+# Environment
+.env
+
+# Data (Sensitive)
+data/
+!data/.keep
+ai_debug.log
+*.log
+
+# Debug
+debug_*.js
+debug_*.ts
+test_*.js
+test_*.ts

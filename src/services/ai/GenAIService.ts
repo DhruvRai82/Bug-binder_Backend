@@ -104,7 +104,9 @@ export class GenAIService {
 
         try {
             // Fetch active key for user via Settings Service (Local)
-            const keys = await settingsService.getAIKeys(userId);
+            // Fetch active key for user via Settings Service (Local)
+            // PASS TRUE to get raw key for execution!
+            const keys = await settingsService.getAIKeys(userId, true);
             const keyData = keys.find(k => k.is_active);
 
             if (keyData && keyData.api_key) {
@@ -129,7 +131,7 @@ export class GenAIService {
     private getDefaultModelForProvider(provider?: string): string {
         switch (provider) {
             case 'openai': return 'gpt-4o';
-            case 'groq': return 'llama3-70b-8192';
+            case 'groq': return 'llama-3.3-70b-versatile';
             default: return 'gemini-1.5-flash';
         }
     }
@@ -181,12 +183,18 @@ export class GenAIService {
                 baseURL = 'https://api.groq.com/openai/v1';
             }
 
+            this.logDebug(`[GenAIService] FINAL CONFIG -> Provider: '${config.provider}', BaseURL: '${baseURL}', KeyLength: ${config.apiKey?.length}`);
+
             const openai = new OpenAI({
                 apiKey: config.apiKey,
                 baseURL: baseURL || undefined
             });
 
             console.log(`[GenAIService] Calling OpenAI Compatible API. Provider: ${config.provider}, Model: ${config.model}, URL: ${baseURL || 'default'}`);
+
+            // SECURITY DEBUG: Log masked key to verify it is being read correctly
+            const maskedKey = config.apiKey ? `${config.apiKey.substring(0, 4)}...${config.apiKey.substring(config.apiKey.length - 4)}` : 'undefined';
+            this.logDebug(`Attempting generation with Key: ${maskedKey}, Provider: ${config.provider}, BaseURL: ${baseURL}`);
 
             const completion = await openai.chat.completions.create({
                 messages: [{ role: "user", content: prompt }],
@@ -294,18 +302,24 @@ export class GenAIService {
         console.log("--> BACKEND: GenAIService generating BULK test cases, prompt len:", prompt.length);
 
         const systemPrompt = `
-        Act as a Principal QA Engineer.
-        Your task is to generate an EXHAUSTIVE and COMPREHENSIVE suite of test cases based on the user's detailed flow description.
+        GOAL: Generate as many test cases as logically possible (target 30+ if the logic allows).
         
-        GOAL: Generate as many test cases as logically possible (target 20+ if the logic allows).
+        ID GENERATION RULES:
+        1. Analyze the user's input to determine the Module Name and Sub-Module.
+           - If user says "Login -> Forgot Password", Module is "Forgot Password".
+           - Use a short 3-4 letter uppercase prefix for the ID (e.g., "Login" -> "LOG", "Payments" -> "PAY").
+        2. Generate SEQUENTIAL Test Case IDs (e.g., LOG-001, LOG-002, LOG-003).
+           - Do NOT use static IDs like "TC_AI_AUTO_01".
+           - Do NOT repeat IDs.
+
         OUTPUT FORMAT:
         You must strictly output a VALID JSON ARRAY of objects. 
         Do not include markdown formatting, backticks, or any explanation text outside the JSON.
         
         Each object in the array must match:
         {
-            "module": "Inferred Module Name",
-            "testCaseId": "TC_AI_AUTO_01", 
+            "module": "Inferred Module Name (e.g. 'Login' or 'Payments > Credit Card')",
+            "testCaseId": "Dynamic ID (e.g. LOG-001)", 
             "testScenario": "Summary of the test",
             "testCaseDescription": "Detailed purpose",
             "preConditions": "Numbered list (e.g. 1. Condition One)",

@@ -40,12 +40,16 @@ export const settingsService = {
         await fs.writeFile(SETTINGS_FILE, JSON.stringify(data, null, 2));
     },
 
-    async getAIKeys(userId: string): Promise<UserAIKey[]> {
+    async getAIKeys(userId: string, includeSecrets = false): Promise<UserAIKey[]> {
         const { aiKeys } = await this.readSettings();
         const userKeys = aiKeys.filter(k => k.user_id === userId);
 
         // Sort
         userKeys.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        if (includeSecrets) {
+            return userKeys;
+        }
 
         // Mask keys for security
         return userKeys.map(key => ({

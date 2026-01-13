@@ -82,6 +82,7 @@ app.use('/api/visual', visualTestRouter); // Kept original visualTestRouter
 // app.use('/api/auth', authRouter); // Moved down -> up
 app.use('/api/user', userRoutes); // Added from the instruction's code edit
 app.use('/api/fs', fileSystemRoutes); // Added from the instruction's code edit
+app.use('/api/ai', aiRouter); // Mounted AI Core Routes
 app.use('/api/ai-analytics', aiAnalyticsRoutes); // Registered ai-analytics routes
 
 // Original routes that were not explicitly in the provided edit block but should remain

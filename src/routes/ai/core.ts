@@ -54,6 +54,15 @@ router.post('/generate-test-case', async (req, res) => {
     }
 });
 
+// Helper to determine status code
+const getStatusCode = (error: any) => {
+    const msg = error.message || '';
+    if (msg.includes('401') || msg.includes('Invalid API Key')) return 401;
+    if (msg.includes('403')) return 403;
+    if (msg.includes('404')) return 404; // Model not found
+    return 500;
+};
+
 // Generate Bulk Test Cases
 router.post('/generate-bulk-test-cases', async (req, res) => {
     try {
@@ -67,7 +76,8 @@ router.post('/generate-bulk-test-cases', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error generating bulk test cases:', error);
-        res.status(500).json({ error: (error as Error).message });
+        const status = getStatusCode(error);
+        res.status(status).json({ error: (error as Error).message });
     }
 });
 
