@@ -2,12 +2,12 @@
 <testng-results ignored="0" total="1" passed="0" failed="0" skipped="1">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2026-01-10T09:44:45 IST" name="Command line suite" finished-at="2026-01-10T09:44:45 IST" duration-ms="80">
+  <suite started-at="2026-01-15T14:32:47 IST" name="Command line suite" finished-at="2026-01-15T14:32:47 IST" duration-ms="34">
     <groups>
     </groups>
-    <test started-at="2026-01-10T09:44:45 IST" name="Command line test" finished-at="2026-01-10T09:44:45 IST" duration-ms="80">
+    <test started-at="2026-01-15T14:32:47 IST" name="Command line test" finished-at="2026-01-15T14:32:47 IST" duration-ms="34">
       <class name="LoginTest">
-        <test-method is-config="true" signature="setup()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-10T09:44:45 IST" name="setup" finished-at="2026-01-10T09:44:45 IST" duration-ms="23" status="FAIL">
+        <test-method is-config="true" signature="setup()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-15T14:32:47 IST" name="setup" finished-at="2026-01-15T14:32:47 IST" duration-ms="12" status="FAIL">
           <exception class="java.lang.NoClassDefFoundError">
             <message>
               <![CDATA[org/apache/hc/core5/http/ClassicHttpRequest]]>
@@ -48,7 +48,7 @@ at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
           <reporter-output>
           </reporter-output>
         </test-method> <!-- setup -->
-        <test-method signature="testLoginArray()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-10T09:44:45 IST" name="testLoginArray" finished-at="2026-01-10T09:44:45 IST" duration-ms="0" status="SKIP">
+        <test-method signature="testLoginArray()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-15T14:32:47 IST" name="testLoginArray" finished-at="2026-01-15T14:32:47 IST" duration-ms="0" status="SKIP">
           <exception class="java.lang.NoClassDefFoundError">
             <message>
               <![CDATA[org/apache/hc/core5/http/ClassicHttpRequest]]>
@@ -89,7 +89,7 @@ at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
           <reporter-output>
           </reporter-output>
         </test-method> <!-- testLoginArray -->
-        <test-method is-config="true" signature="teardown()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-10T09:44:45 IST" name="teardown" finished-at="2026-01-10T09:44:45 IST" duration-ms="0" status="SKIP">
+        <test-method is-config="true" signature="teardown()[pri:0, instance:LoginTest@7cbd213e]" started-at="2026-01-15T14:32:47 IST" name="teardown" finished-at="2026-01-15T14:32:47 IST" duration-ms="0" status="SKIP">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- teardown -->

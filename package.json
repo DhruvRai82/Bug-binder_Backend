@@ -19,6 +19,7 @@
     "@types/socket.io": "^3.0.1",
     "@types/uuid": "^9.0.8",
     "axios": "^1.13.2",
+    "chrome-launcher": "^1.2.1",
     "copyfiles": "^2.4.1",
     "cors": "^2.8.5",
     "csv-parse": "^6.1.0",
@@ -28,6 +29,7 @@
     "firebase-admin": "^13.6.0",
     "form-data": "^4.0.5",
     "helmet": "^7.1.0",
+    "lighthouse": "^13.0.1",
     "mocha": "^11.7.5",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
@@ -38,9 +40,11 @@
     "playwright": "^1.57.0",
     "pngjs": "^7.0.0",
     "puppeteer": "^24.34.0",
+    "reflect-metadata": "^0.2.2",
     "selenium-webdriver": "^4.39.0",
     "simple-git": "^3.30.0",
     "socket.io": "^4.8.1",
+    "typedi": "^0.10.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

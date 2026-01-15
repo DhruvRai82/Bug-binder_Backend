@@ -33,8 +33,10 @@ recorderRoutes.post('/save', async (req, res) => {
 
 recorderRoutes.get('/list', async (req, res) => {
     try {
-        const { projectId } = req.query;
-        const scripts = await recorderService.getScripts(projectId as string);
+        const { projectId, userId } = req.query;
+        // Fallback to header if not in query
+        const uid = (userId as string) || (req.headers['x-user-id'] as string);
+        const scripts = await recorderService.getScripts(projectId as string, uid);
         res.json(scripts);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -44,8 +46,10 @@ recorderRoutes.get('/list', async (req, res) => {
 // Alias for frontend compatibility (VisualTests.tsx calls /scripts)
 recorderRoutes.get('/scripts', async (req, res) => {
     try {
-        const { projectId } = req.query;
-        const scripts = await recorderService.getScripts(projectId as string);
+        const { projectId, userId } = req.query;
+        // Fallback to header
+        const uid = (userId as string) || (req.headers['x-user-id'] as string);
+        const scripts = await recorderService.getScripts(projectId as string, uid);
         res.json(scripts);
     } catch (error: any) {
         res.status(500).json({ error: error.message });

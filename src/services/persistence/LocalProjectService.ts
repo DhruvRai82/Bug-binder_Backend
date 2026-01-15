@@ -100,6 +100,12 @@ export class LocalProjectService {
         return path.join(this.getProjectDir(projectId), 'data.json');
     }
 
+    // SECURITY: Validate ownership before accessing sub-resources
+    private async validateProjectAccess(projectId: string, userId: string): Promise<void> {
+        const project = await this.getProjectById(projectId, userId);
+        if (!project) throw new Error(`Unauthorized: User ${userId} cannot access project ${projectId}`);
+    }
+
     private locks = new Map<string, Promise<void>>();
 
     private async acquireLock(key: string, fn: () => Promise<any>): Promise<any> {
@@ -319,6 +325,7 @@ export class LocalProjectService {
     // --- Sub-resources methods ---
 
     async getProjectPages(projectId: string, userId: string): Promise<any[]> {
+        await this.validateProjectAccess(projectId, userId);
         const data = await this.readProjectData(projectId);
         return data.customPages || [];
     }
@@ -362,6 +369,7 @@ export class LocalProjectService {
     }
 
     async getDailyData(projectId: string, userId: string, date?: string): Promise<any[]> {
+        await this.validateProjectAccess(projectId, userId);
         const data = await this.readProjectData(projectId);
         if (date) {
             return data.dailyData.filter(d => d.date === date);
@@ -449,6 +457,7 @@ export class LocalProjectService {
     // --- Reports methods ---
 
     async getReports(projectId: string, userId: string): Promise<any[]> {
+        await this.validateProjectAccess(projectId, userId);
         const data = await this.readProjectData(projectId);
         return data.reports || [];
     }
@@ -519,6 +528,7 @@ export class LocalProjectService {
     // --- Scripts methods ---
 
     async getScripts(projectId: string, userId: string): Promise<any[]> {
+        await this.validateProjectAccess(projectId, userId);
         const data = await this.readProjectData(projectId);
         return data.scripts || [];
     }
@@ -568,6 +578,7 @@ export class LocalProjectService {
     // --- Schedules methods ---
 
     async getSchedules(projectId: string, userId: string): Promise<any[]> {
+        await this.validateProjectAccess(projectId, userId);
         const data = await this.readProjectData(projectId);
         return data.schedules || [];
     }
@@ -622,7 +633,17 @@ export class LocalProjectService {
         return null;
     }
 
-    async getTestRuns(projectId: string): Promise<any[]> {
+    async getTestRuns(projectId: string, userId: string): Promise<any[]> {
+        // userId arg was missing in original signature but passed by route? 
+        // Route called: projectService.getTestRuns(id, userId) but signature was getTestRuns(projectId)
+        // Correcting signature to match standard pattern
+        await this.validateProjectAccess(projectId, userId);
+        const data = await this.readProjectData(projectId);
+        return data.testRuns || [];
+    }
+
+    // Overloading system call if needed, but for now enforcing security
+    async getTestRunsSystem(projectId: string): Promise<any[]> {
         const data = await this.readProjectData(projectId);
         return data.testRuns || [];
     }

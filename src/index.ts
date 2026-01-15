@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
@@ -26,6 +27,7 @@ import { authRouter } from './routes/integration/auth';
 import { fileSystemRoutes } from './routes/persistence/filesystem';
 import aiAnalyticsRoutes from './routes/ai/analytics';
 import { suitesRouter } from './routes/persistence/suites';
+import performanceRouter from './routes/execution/performance';
 
 dotenv.config();
 
@@ -96,7 +98,9 @@ app.use('/api/schedules', schedulerRouter);
 app.use('/api/git', gitRoutes);
 app.use('/api/lab', apiLabRouter);
 app.use('/api/suites', suitesRouter);
+app.use('/api/suites', suitesRouter);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/performance', performanceRouter);
 
 
 // Initialize Scheduler

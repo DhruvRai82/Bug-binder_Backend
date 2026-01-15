@@ -15,6 +15,9 @@ ai_debug.log
 *.log
 service-account.json
 
+# Storage (Screenshots/Recordings)
+storage/
+
 # Debug
 debug_*.js
 debug_*.ts

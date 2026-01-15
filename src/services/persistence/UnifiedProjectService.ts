@@ -146,7 +146,7 @@ export class UnifiedProjectService {
 
     // --- Test Runs (Read Access) ---
     async getTestRuns(projectId: string, userId: string): Promise<any[]> {
-        return localProjectService.getTestRuns(projectId);
+        return localProjectService.getTestRuns(projectId, userId);
     }
 
     // --- Files (Read Access) ---
@@ -194,7 +194,7 @@ export class UnifiedProjectService {
                 }
 
                 // 3. Sync Test Runs (Push Only - History)
-                const localRuns = await localProjectService.getTestRuns(localProj.id); // Optimized call
+                const localRuns = await localProjectService.getTestRuns(localProj.id, userId); // Optimized call
                 // Assuming we don't want to fetch ALL remote runs every time, maybe just check existence?
                 // Or rely on atomic "create if not exists"? Firestore set() is idempotent if ID matches.
                 // Doing this for EVERY run every sync might be heavy?
