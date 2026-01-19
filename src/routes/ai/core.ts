@@ -63,6 +63,24 @@ const getStatusCode = (error: any) => {
     return 500;
 };
 
+// Generate Visual Flow
+router.post('/generate-flow', async (req, res) => {
+    try {
+        const userId = (req as any).user?.uid;
+        const { prompt } = req.body;
+        if (!prompt) {
+            return res.status(400).json({ error: 'Prompt is required' });
+        }
+
+        const result = await genAIService.generateFlow(prompt, userId);
+        res.json(result);
+    } catch (error) {
+        console.error('Error generating flow:', error);
+        const status = getStatusCode(error);
+        res.status(status).json({ error: (error as Error).message });
+    }
+});
+
 // Generate Bulk Test Cases
 router.post('/generate-bulk-test-cases', async (req, res) => {
     try {

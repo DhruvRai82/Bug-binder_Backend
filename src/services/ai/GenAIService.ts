@@ -209,6 +209,61 @@ export class GenAIService {
         }
     }
 
+    async generateFlow(userPrompt: string, userId?: string): Promise<{ nodes: any[], edges: any[] }> {
+        const prompt = `
+        Act as a Test Automation Architect.
+        Convert the following User Scenario into a JSON structure for a Node-Based Flow Editor.
+        
+        User Scenario: "${userPrompt}"
+
+        The output must be a single JSON object containing "nodes" and "edges".
+        
+        Node Types Available:
+        - "navigate": params: { url: string } (Label: "Navigate")
+        - "click": params: { selector: string } (Label: "Click")
+        - "type": params: { selector: string, value: string } (Label: "Type")
+        - "wait": params: { value: string (ms) } (Label: "Wait")
+        - "screenshot": params: {} (Label: "Screenshot")
+        - "condition": params: {} (Label: "If/Else") (Output ports: "true", "false")
+        - "loop": params: { count: string } (Label: "Loop")
+        - "assert_visible": params: { selector: string } (Label: "Assert Visible")
+        - "assert_text": params: { selector: string, value: string } (Label: "Check Text")
+        
+        Layout Rules:
+        - Start at x: 100, y: 100
+        - Space nodes vertically by 100px (e.g. y: 100, y: 200, y: 300)
+        - Generate simple sequential IDs (1, 2, 3...)
+        - Connect them sequentially with edges (source: "1", target: "2").
+
+        JSON Structure Example:
+        {
+          "nodes": [
+            { "id": "1", "position": { "x": 100, "y": 100 }, "data": { "action": "navigate", "params": { "url": "..." }, "label": "Nav to Google" }, "type": "default" },
+            { "id": "2", "position": { "x": 100, "y": 200 }, "data": { "action": "type", "params": { "selector": "...", "value": "" }, "label": "Type Search" }, "type": "default" }
+          ],
+          "edges": [
+            { "id": "e1-2", "source": "1", "target": "2" }
+          ]
+        }
+        
+        Output ONLY valid JSON. No markdown.
+        `;
+
+        const text = await this.generateContentUnified(prompt, userId);
+        try {
+            // Heuristic to extract JSON
+            const jsonStart = text.indexOf('{');
+            const jsonEnd = text.lastIndexOf('}');
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                return JSON.parse(text.substring(jsonStart, jsonEnd + 1));
+            }
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("Failed to parse Flow Generation JSON", text);
+            throw new Error("AI returned invalid JSON for flow.");
+        }
+    }
+
 
     async generateTestCases(requirements: string, userId?: string): Promise<string> {
         return this.generateContentUnified(`

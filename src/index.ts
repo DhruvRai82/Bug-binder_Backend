@@ -28,6 +28,8 @@ import { fileSystemRoutes } from './routes/persistence/filesystem';
 import aiAnalyticsRoutes from './routes/ai/analytics';
 import { suitesRouter } from './routes/persistence/suites';
 import performanceRouter from './routes/execution/performance';
+import engineRouter from './routes/execution/engine';
+import { runsRouter } from './routes/execution/runs';
 
 dotenv.config();
 
@@ -101,6 +103,8 @@ app.use('/api/suites', suitesRouter);
 app.use('/api/suites', suitesRouter);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/performance', performanceRouter);
+app.use('/api/engine', engineRouter);
+app.use('/api/runs', runsRouter);
 
 
 // Initialize Scheduler
