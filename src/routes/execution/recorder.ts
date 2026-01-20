@@ -103,10 +103,13 @@ recorderRoutes.delete('/:id', async (req, res) => {
 recorderRoutes.get('/export/:id/:format', async (req, res) => {
     try {
         const { id, format } = req.params;
-        const { projectId } = req.query;
+        const { projectId, userId } = req.query;
+        // Fallback to header or request user (if auth middleware used)
+        const uid = (userId as string) || (req.headers['x-user-id'] as string) || (req as any).user?.uid;
+
         // Pass projectId if available (not currently used by exportScript but good practice to add later)
         // For now, rely on System Scan fallback.
-        const result = await recorderService.exportScript(id, format as 'side' | 'java' | 'python');
+        const result = await recorderService.exportScript(id, format as 'side' | 'java' | 'python', uid);
 
         if (format === 'side') {
             res.header('Content-Type', 'application/json');

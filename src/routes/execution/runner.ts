@@ -23,10 +23,16 @@ router.post('/execute', async (req, res) => {
         // The client can then poll for status using the runId (optional, or just wait for sockets/refresh)
         // However, for simplicity now, let's await it or return the runId immediately? 
         // Let's await it for this iteration to see results immediately in Postman/Frontend
+        const userId = (req as any).user?.uid;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized: User ID missing' });
+        }
+
         const result = await testRunnerService.executeTest(
             scriptId,
             projectId,
-            source || 'manual'
+            source || 'manual',
+            userId
         );
 
         res.json(result);
