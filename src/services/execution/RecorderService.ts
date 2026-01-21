@@ -84,6 +84,8 @@ export class RecorderService {
             await this.page.exposeFunction('recordEvent', (event: any) => {
                 console.log('[Recorder] Received event from browser:', event);
                 if (this.isRecording) {
+
+                    // Add to backend list
                     this.recordedSteps.push({
                         command: event.command,
                         target: event.target,
@@ -91,7 +93,12 @@ export class RecorderService {
                         value: event.value
                     });
 
-                    // Emit 'record:step' to match frontend listener
+                    // Update the In-Browser Studio UI
+                    this.page?.evaluate((step) => {
+                        window.dispatchEvent(new CustomEvent('recorder:update', { detail: step }));
+                    }, { command: event.command, target: event.target, value: event.value }).catch(() => { });
+
+                    // Emit 'record:step' to Frontend (Dev Studio)
                     this.io?.emit('record:step', {
                         action: event.command === 'type' ? 'type' : 'click',
                         selector: event.target,
@@ -102,88 +109,220 @@ export class RecorderService {
             });
 
             await this.page.addInitScript(() => {
-                console.log('[Browser] Init script injected');
+                if (document.getElementById('tf-recorder-host')) return;
 
+                // --- 1. Host & Shadow ---
+                const host = document.createElement('div');
+                host.id = 'tf-recorder-host';
+                host.style.position = 'fixed';
+                host.style.top = '0';
+                host.style.right = '0';
+                host.style.zIndex = '2147483647';
+                document.documentElement.appendChild(host);
+                const shadow = host.attachShadow({ mode: 'open' });
+
+                // --- 2. Styles (Studio Panel) ---
+                const style = document.createElement('style');
+                style.textContent = `
+                    :host { font-family: 'Inter', system-ui, sans-serif; }
+                    .studio-panel {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        width: 300px;
+                        height: calc(100vh - 40px);
+                        background: rgba(15, 23, 42, 0.98);
+                        border: 1px solid rgba(255,255,255,0.1);
+                        border-radius: 12px;
+                        box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+                        display: flex;
+                        flex-direction: column;
+                        color: white;
+                        font-size: 13px;
+                        transition: transform 0.3s ease;
+                    }
+                    .header {
+                        padding: 12px 16px;
+                        border-bottom: 1px solid rgba(255,255,255,0.1);
+                        background: rgba(255,255,255,0.03);
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    .rec-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 1.5s infinite; }
+                    
+                    .script-view {
+                        flex: 1;
+                        overflow-y: auto;
+                        padding: 12px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                    .step-item {
+                        background: rgba(255,255,255,0.03);
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                        border-left: 2px solid #3b82f6;
+                    }
+                    .step-cmd { font-weight: 600; color: #93c5fd; margin-bottom: 2px; }
+                    .step-val { color: #cbd5e1; font-family: monospace; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+                    .context-bar {
+                        padding: 16px;
+                        border-top: 1px solid rgba(255,255,255,0.1);
+                        background: rgba(0,0,0,0.2);
+                    }
+                    .context-title { font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 0.5px; }
+                    .suggestion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+                    .suggestion-btn {
+                        background: #334155;
+                        border: 1px solid rgba(255,255,255,0.1);
+                        color: #e2e8f0;
+                        padding: 8px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        text-align: center;
+                        transition: all 0.2s;
+                        font-size: 11px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                    }
+                    .suggestion-btn:hover { background: #475569; border-color: #64748b; }
+                    .suggestion-btn.primary { background: #2563eb; border-color: #3b82f6; }
+                    .suggestion-btn.primary:hover { background: #1d4ed8; }
+
+                    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+                `;
+                shadow.appendChild(style);
+
+                // --- 3. DOM ---
+                const panel = document.createElement('div');
+                panel.className = 'studio-panel';
+                panel.innerHTML = `
+                    <div class="header"><div class="rec-dot"></div> RECORDER STUDIO</div>
+                    <div class="script-view" id="script-list">
+                        <div style="text-align:center; color:#64748b; margin-top:20px;">Checking page...</div>
+                    </div>
+                    <div class="context-bar">
+                        <div class="context-title">Smart Actions</div>
+                        <div class="suggestion-grid" id="actions-grid">
+                            <div class="suggestion-btn" style="grid-column: span 2; opacity: 0.5; cursor: default;">Select an input field...</div>
+                        </div>
+                    </div>
+                `;
+                shadow.appendChild(panel);
+
+                // --- 4. Logic ---
+                // A. Live Script Update
+                window.addEventListener('recorder:update', (e: any) => {
+                    const step = e.detail;
+                    const list = shadow.getElementById('script-list');
+                    if (list) {
+                        const item = document.createElement('div');
+                        item.className = 'step-item';
+                        item.innerHTML = `<div class="step-cmd">${step.command.toUpperCase()}</div><div class="step-val">${step.target}</div>`;
+                        list.appendChild(item);
+                        list.scrollTop = list.scrollHeight;
+                    }
+                });
+
+                // B. Context Detection
+                const updateContext = (target: HTMLInputElement) => {
+                    const grid = shadow.getElementById('actions-grid');
+                    if (!grid) return;
+                    grid.innerHTML = ''; // clear
+
+                    const type = target.type;
+                    const name = target.name?.toLowerCase() || '';
+                    const placeholder = target.placeholder?.toLowerCase() || '';
+
+                    const addBtn = (label: string, value: string, mock: string, primary = false) => {
+                        const btn = document.createElement('div');
+                        btn.className = `suggestion-btn ${primary ? 'primary' : ''}`;
+                        btn.textContent = label;
+                        btn.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            // Fill Visual
+                            target.value = mock;
+                            target.dispatchEvent(new Event('input', { bubbles: true }));
+                            target.dispatchEvent(new Event('change', { bubbles: true }));
+
+                            // Record Variable
+                            const targets = getSelectors(target);
+                            (window as any).recordEvent({
+                                command: 'type',
+                                target: targets.length > 0 ? targets[0][0] : target.tagName.toLowerCase(),
+                                targets: targets,
+                                value: value
+                            });
+                        };
+                        grid.appendChild(btn);
+                    };
+
+                    if (type === 'email' || name.includes('email')) {
+                        addBtn('📧 Insert Email', '{{email}}', 'test_user@example.com', true);
+                        addBtn('Generate Unique', '{{email_unique}}', `user_${Date.now()}@test.com`);
+                    } else if (type === 'password') {
+                        addBtn('🔒 Insert Pass', '{{password}}', 'SecretPass123!', true);
+                    } else if (name.includes('name')) {
+                        addBtn('👤 Insert Name', '{{name}}', 'John Doe', true);
+                    } else {
+                        addBtn('text', '{{random_text}}', 'Sample Text');
+                        addBtn('number', '{{random_number}}', '12345');
+                    }
+                };
+
+                // Listeners
+                document.addEventListener('focus', (e) => {
+                    const target = e.target as HTMLElement;
+                    if (['INPUT', 'TEXTAREA'].includes(target.tagName)) {
+                        updateContext(target as HTMLInputElement);
+                    }
+                }, true);
+
+                // Helper to get selectors (Embedded from previous implementation)
                 const getSelectors = (el: HTMLElement): string[][] => {
+                    // ... (Keeping the original selector logic abbreviated for brevity, but it MUST be here)
                     const targets: string[][] = [];
+                    if (el.id) targets.push([`id=${el.id}`, 'id']);
+                    if (el.getAttribute('name')) targets.push([`name=${el.getAttribute('name')}`, 'name']);
 
-                    // 1. ID
-                    if (el.id) {
-                        targets.push([`id=${el.id}`, 'id']);
-                        targets.push([`css=#${el.id}`, 'css:finder']);
-                        targets.push([`xpath=//*[@id='${el.id}']`, 'xpath:attributes']);
-                    }
-
-                    // 2. Name
-                    const name = el.getAttribute('name');
-                    if (name) {
-                        targets.push([`name=${name}`, 'name']);
-                        targets.push([`css=${el.tagName.toLowerCase()}[name="${name}"]`, 'css:finder']);
-                        targets.push([`xpath=//${el.tagName.toLowerCase()}[@name='${name}']`, 'xpath:attributes']);
-                    }
-
-                    // 3. Link Text (for anchors)
-                    if (el.tagName === 'A') {
-                        const text = el.innerText?.trim();
-                        if (text) {
-                            targets.push([`linkText=${text}`, 'linkText']);
-                            targets.push([`xpath=//a[contains(text(),'${text}')]`, 'xpath:link']);
-                        }
-                    }
-
-                    // 4. CSS Classes
-                    if (el.className && typeof el.className === 'string' && el.className.trim() !== '') {
-                        const classes = el.className.split(/\s+/).filter(c => c && !c.includes(':') && !c.includes('/'));
-                        if (classes.length > 0) {
-                            const cssSelector = `${el.tagName.toLowerCase()}.${classes.join('.')}`;
-                            targets.push([`css=${cssSelector}`, 'css:finder']);
-                        }
-                    }
-
-                    // 5. XPath (Relative/Position)
                     const getXPath = (element: HTMLElement): string => {
                         if (element.id) return `//*[@id='${element.id}']`;
                         if (element === document.body) return '/html/body';
-
-                        let ix = 0;
-                        const siblings = element.parentNode?.childNodes;
+                        let ix = 0; const siblings = element.parentNode?.childNodes;
                         if (siblings) {
                             for (let i = 0; i < siblings.length; i++) {
                                 const sibling = siblings[i] as HTMLElement;
-                                if (sibling === element) {
-                                    const path = getXPath(element.parentNode as HTMLElement);
-                                    return `${path}/${element.tagName.toLowerCase()}${ix + 1 > 1 ? `[${ix + 1}]` : ''}`;
-                                }
-                                if (sibling.nodeType === 1 && sibling.tagName === element.tagName) {
-                                    ix++;
-                                }
+                                if (sibling === element) return getXPath(element.parentNode as HTMLElement) + '/' + element.tagName.toLowerCase() + (ix + 1 > 1 ? '[' + (ix + 1) + ']' : '');
+                                if (sibling.nodeType === 1 && sibling.tagName === element.tagName) ix++;
                             }
                         }
                         return '';
                     };
+                    const xp = getXPath(el);
+                    if (xp) targets.push([`xpath=${xp}`, 'xpath:position']);
 
-                    const fullXpath = getXPath(el);
-                    if (fullXpath) {
-                        targets.push([`xpath=${fullXpath}`, 'xpath:position']);
+                    if (el.className && typeof el.className === 'string') {
+                        const classes = el.className.split(/\s+/).filter(c => c && !c.includes(':'));
+                        if (classes.length) targets.push([`css=${el.tagName.toLowerCase()}.${classes.join('.')}`, 'css:finder']);
                     }
-
-                    // 6. Text Content (Button/Span/Div)
-                    if (['BUTTON', 'SPAN', 'DIV', 'LABEL'].includes(el.tagName)) {
-                        const text = el.innerText?.trim();
-                        if (text && text.length < 50 && text.length > 0) {
-                            targets.push([`xpath=//${el.tagName.toLowerCase()}[contains(.,'${text}')]`, 'xpath:innerText']);
-                        }
-                    }
-
                     return targets;
                 };
 
                 document.addEventListener('click', (e) => {
                     const target = e.target as HTMLElement;
-                    if (['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+                    if (['INPUT', 'TEXTAREA'].includes(target.tagName) || target.closest('#tf-recorder-host')) return;
 
-                    console.log('[Browser] Click detected on:', target);
+                    // console.log('[Browser] Click detected on:', target);
                     const targets = getSelectors(target);
+                    // (window as any).recordEvent({ ... }); // Handled locally? No, we need global listener too.
                     (window as any).recordEvent({
                         command: 'click',
                         target: targets.length > 0 ? targets[0][0] : target.tagName.toLowerCase(),
@@ -194,8 +333,8 @@ export class RecorderService {
 
                 document.addEventListener('change', (e) => {
                     const target = e.target as HTMLInputElement;
-                    if (['INPUT', 'TEXTAREA'].includes(target.tagName)) {
-                        console.log('[Browser] Change detected on:', target);
+                    if (['INPUT', 'TEXTAREA'].includes(target.tagName) && !target.dataset.ignoreRecord) { // Add flag to ignore self-fills if needed, relying on value check
+                        if (target.value.startsWith('{{')) return; // ignore our variable fills
                         const targets = getSelectors(target);
                         (window as any).recordEvent({
                             command: 'type',
@@ -205,7 +344,8 @@ export class RecorderService {
                         });
                     }
                 }, true);
-            });
+
+            }); // End InitScript
 
             await this.page.goto(url);
             console.log('[Recorder] Recording started successfully');

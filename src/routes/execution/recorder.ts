@@ -70,8 +70,11 @@ recorderRoutes.post('/play', async (req, res) => {
 
 recorderRoutes.get('/reports', async (req, res) => {
     try {
-        const { projectId } = req.query;
-        const reports = await recorderService.getReports(projectId as string);
+        const { projectId, userId } = req.query;
+        // Fallback to header or request user
+        const uid = (userId as string) || (req.headers['x-user-id'] as string) || (req as any).user?.uid;
+
+        const reports = await recorderService.getReports(projectId as string, uid);
         res.json(reports);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
