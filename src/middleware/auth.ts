@@ -4,26 +4,28 @@ import { userService } from '../services/persistence/UserService';
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const authHeader = req.headers.authorization;
+        let authHeader = req.headers.authorization;
 
         // 1. Check for Bearer Token
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            // Support token in query param (temporary/download) or skip if public
-            // For now, strict check.
-
-            // LOCAL DEV FALLBACK (ONLY IF ENV IS SET)
-            if (process.env.NODE_ENV === 'development' && !authHeader) {
-                // Check if client sent x-user-id for simulation
-                const userIdHeader = req.headers['x-user-id'];
-                if (userIdHeader) {
-                    // Simulate fetch
-                    const user = await userService.ensureUser(userIdHeader as string, 'dev@example.com');
-                    (req as any).user = { ...user, uid: user.uid };
-                    return next();
+            // Support token in query param (temporary/download)
+            if (req.query && req.query.token) {
+                authHeader = `Bearer ${req.query.token}`;
+            } else {
+                // LOCAL DEV FALLBACK (ONLY IF ENV IS SET)
+                if (process.env.NODE_ENV === 'development' && !authHeader) {
+                    // Check if client sent x-user-id for simulation
+                    const userIdHeader = req.headers['x-user-id'];
+                    if (userIdHeader) {
+                        // Simulate fetch
+                        const user = await userService.ensureUser(userIdHeader as string, 'dev@example.com');
+                        (req as any).user = { ...user, uid: user.uid };
+                        return next();
+                    }
                 }
-            }
 
-            return res.status(401).json({ error: 'Unauthorized: No token provided' });
+                return res.status(401).json({ error: 'Unauthorized: No token provided' });
+            }
         }
 
         const token = authHeader.split('Bearer ')[1];

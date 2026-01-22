@@ -62,25 +62,75 @@ export class TestRunnerService {
 
             for (let i = 0; i < steps.length; i++) {
                 const step = steps[i];
-                let target = this.parseSelector(step.target);
 
-                await this.logStep(projectId, runId, i + 1, step.command, 'info', `Executing: ${step.command} on ${step.target}`);
+                // 1. Prepare candidates (Primary + Backups)
+                const candidates: string[] = [];
+                if (step.target) candidates.push(step.target);
+                if (step.targets && Array.isArray(step.targets)) {
+                    step.targets.forEach((t: any) => {
+                        const sel = Array.isArray(t) ? t[0] : t; // Handle [sel, type] or just sel
+                        if (sel && !candidates.includes(sel)) candidates.push(sel);
+                    });
+                }
+                // Ensure unique
+                const uniqueCandidates = [...new Set(candidates)];
 
-                try {
-                    await this.executeStep(page!, step.command, target, step.value);
-                    await this.logStep(projectId, runId, i + 1, step.command, 'pass', `Step ${i + 1} passed`);
-                    stepsCompleted++;
-                } catch (stepError: any) {
+                let stepPassed = false;
+                let lastError: any = null;
 
-                    // --- SELF HEALING LOGIC ---
-                    const errorMessage = stepError.message || '';
+                await this.logStep(projectId, runId, i + 1, step.command, 'info', `Executing: ${step.command} on ${step.target} (${uniqueCandidates.length} selectors available)`);
+
+                // 2. Variable/Logic Handling (Non-selector steps)
+                if (step.command === 'wait' || step.command === 'open' || !step.target) {
+                    // Single execution for these
+                    try {
+                        let parsed = this.parseSelector(step.target);
+                        await this.executeStep(page!, step.command, parsed, step.value);
+                        await this.logStep(projectId, runId, i + 1, step.command, 'pass', `Step ${i + 1} passed`);
+                        stepsCompleted++;
+                        continue;
+                    } catch (e) {
+                        lastError = e;
+                        // Fall through to AI healing (usually wait/open don't hit healing but just in case)
+                    }
+                } else {
+                    // 3. Multi-Selector Execution Loop
+                    for (const candidate of uniqueCandidates) {
+                        try {
+                            const parsed = this.parseSelector(candidate);
+                            // console.log(`[TestRunner] Trying selector: ${parsed}`);
+                            await this.executeStep(page!, step.command, parsed, step.value);
+
+                            // Success!
+                            await this.logStep(projectId, runId, i + 1, step.command, 'pass', `Step ${i + 1} passed` + (candidate !== step.target ? ' (via backup selector)' : ''));
+
+                            if (candidate !== step.target) {
+                                console.log(`[TestRunner] 🩹 Fast-Healed: ${step.target} -> ${candidate}`);
+                                script.steps[i].target = candidate;
+                                scriptWasHealed = true;
+                            }
+
+                            stepsCompleted++;
+                            stepPassed = true;
+                            break; // Exit candidate loop
+                        } catch (e: any) {
+                            lastError = e;
+                            // Continue to next candidate
+                        }
+                    }
+                }
+
+                if (!stepPassed) {
+                    // --- SELF HEALING LOGIC (AI) ---
+                    // Only if all candidates failed
+                    const errorMessage = lastError?.message || '';
                     if ((errorMessage.includes('Timeout') || errorMessage.includes('waiting for selector')) && step.command !== 'open') {
-                        console.log(`[TestRunner] 🩹 Step failed with timeout. Attempting Self-Healing for element: ${target} ...`);
-                        await this.logStep(projectId, runId, i + 1, 'heal', 'warning', `Attempting self-healing for: ${target}`);
+                        console.log(`[TestRunner] 🩹 All selectors failed. Attempting AI Self-Healing...`);
+                        await this.logStep(projectId, runId, i + 1, 'heal', 'warning', `All selectors failed. Asking AI...`);
 
                         try {
                             const htmlSnapshot = await page!.content();
-                            const healedSelector = await genAIService.healSelector(htmlSnapshot, target, errorMessage);
+                            const healedSelector = await genAIService.healSelector(htmlSnapshot, step.target, errorMessage);
 
                             if (healedSelector) {
                                 console.log(`[TestRunner] ✨ AI found a potential new selector: ${healedSelector}`);
@@ -106,9 +156,9 @@ export class TestRunnerService {
                     }
                     // ---------------------------
 
-                    console.error(`[TestRunner] Step ${i + 1} failed:`, stepError.message);
-                    await this.logStep(projectId, runId, i + 1, step.command, 'fail', `Failed: ${stepError.message}`);
-                    throw stepError;
+                    console.error(`[TestRunner] Step ${i + 1} failed:`, lastError?.message);
+                    await this.logStep(projectId, runId, i + 1, step.command, 'fail', `Failed: ${lastError?.message}`);
+                    throw lastError;
                 }
             }
 
@@ -301,6 +351,9 @@ export class TestRunnerService {
         if (rawTarget.startsWith('css=')) return rawTarget.replace('css=', '');
         if (rawTarget.startsWith('id=')) return `#${rawTarget.replace('id=', '')}`;
         if (rawTarget.startsWith('xpath=')) return rawTarget.replace('xpath=', '');
+
+        // Fix: Explicitly handle XPath if it starts with / or (
+        if (rawTarget.startsWith('/') || rawTarget.startsWith('(')) return `xpath=${rawTarget}`;
 
         // Return as is if no prefix (playwright tries to auto-detect)
         return rawTarget;

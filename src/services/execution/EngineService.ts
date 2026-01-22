@@ -1,4 +1,4 @@
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser, Page, BrowserContext } from 'playwright';
 import path from 'path';
 import * as fs from 'fs';
 import { Service } from 'typedi';
@@ -10,6 +10,7 @@ export interface TestStep {
     params: {
         url?: string;
         selector?: string;
+        selectors?: string[]; // Backup selectors
         value?: string;
         timeout?: number;
     };
@@ -17,7 +18,7 @@ export interface TestStep {
 
 @Service()
 export class EngineService {
-    private browser: Browser | null = null;
+    private browserContext: BrowserContext | null = null;
     private page: Page | null = null;
     private logsPath: string | null = null;
     private executionLogs: any[] = [];
@@ -35,9 +36,9 @@ export class EngineService {
         this.logsPath = null;
         this.resumeResolver = null;
 
-        console.log(`[EngineService] [${runId}] STARTING INTERACTIVE SESSION`);
+        console.log(`[EngineService] [${runId}] STARTING INTERACTIVE SESSION (CLONED PROFILE V2)`);
 
-        // --- Path Setup (Same as before) ---
+        // --- Path Setup ---
         if (options.sourcePath) {
             try {
                 const projectRoot = path.join(__dirname, '../../../../');
@@ -53,14 +54,71 @@ export class EngineService {
         }
 
         try {
-            console.log(`[EngineService] [${runId}] Launching Browser...`);
-            this.browser = await chromium.launch({
-                headless: false, // FORCE HEADED for Interactive Mode
-                args: ['--no-sandbox', '--disable-web-security'] // disable web security for easier injections
+            const userDataDir = path.join(process.cwd(), 'data', 'browser_profile');
+            if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
+
+            // --- PROFILE CLONING V2 (Encryption Aware) ---
+            try {
+                const userHome = process.env.USERPROFILE || 'C:\\Users\\dhruv';
+                const chromeRoot = path.join(userHome, 'AppData', 'Local', 'Google', 'Chrome', 'User Data');
+                const chromeProfileSource = path.join(chromeRoot, 'Default');
+
+                // Target must match structure: Root/Local State + Root/Default/Cookies
+                const targetDefault = path.join(userDataDir, 'Default');
+                if (!fs.existsSync(targetDefault)) fs.mkdirSync(targetDefault, { recursive: true });
+
+                if (fs.existsSync(chromeRoot)) {
+                    console.log(`[EngineService] 🧬 Cloning Chrome Profile (Crypto-Aware)...`);
+
+                    // 1. Copy 'Local State' (The Encryption Key) - CRITICAL
+                    const localStateSrc = path.join(chromeRoot, 'Local State');
+                    const localStateDest = path.join(userDataDir, 'Local State');
+                    if (fs.existsSync(localStateSrc)) {
+                        try {
+                            fs.copyFileSync(localStateSrc, localStateDest);
+                            console.log(`[EngineService]    -> Copied 'Local State' (Encryption Key)`);
+                        } catch (e) { console.warn(`      Failed to copy Local State`); }
+                    }
+
+                    // 2. Copy 'Default' Profile Config
+                    const filesToClone = ['Cookies', 'Login Data', 'Preferences', 'Web Data'];
+
+                    filesToClone.forEach(file => {
+                        const src = path.join(chromeProfileSource, file);
+                        const dest = path.join(targetDefault, file); // INTO 'Default'
+                        if (fs.existsSync(src)) {
+                            console.log(`[EngineService]    -> Copying ${file}...`);
+                            try { fs.copyFileSync(src, dest); } catch (e) { console.warn(`      Failed to copy ${file} (Locked?)`); }
+                        }
+                    });
+
+                    // 3. Copy Network Folder (New Cookies)
+                    const networkSrc = path.join(chromeProfileSource, 'Network');
+                    const networkDest = path.join(targetDefault, 'Network'); // INTO 'Default'
+                    if (fs.existsSync(networkSrc)) {
+                        if (!fs.existsSync(networkDest)) fs.mkdirSync(networkDest, { recursive: true });
+                        const netFiles = fs.readdirSync(networkSrc);
+                        netFiles.forEach(f => {
+                            try { fs.copyFileSync(path.join(networkSrc, f), path.join(networkDest, f)); } catch (e) { }
+                        });
+                    }
+                    console.log('[EngineService] ✅ Profile Clone Complete.');
+                }
+            } catch (cloneError) {
+                console.error('[EngineService] Profile Cloning Failed:', cloneError);
+            }
+
+            // Using launchPersistentContext with Real Chrome
+            console.log(`[EngineService] Launching Chrome Channel...`);
+            this.browserContext = await chromium.launchPersistentContext(userDataDir, {
+                channel: 'chrome',
+                headless: false,
+                args: ['--no-sandbox', '--disable-web-security', '--start-maximized'],
+                viewport: null
             });
 
-            const context = await this.browser.newContext();
-            this.page = await context.newPage();
+            const pages = this.browserContext.pages();
+            this.page = pages.length > 0 ? pages[0] : await this.browserContext.newPage();
 
             // --- 1. BRIDGE: Node <-> Browser Communication ---
             await this.page.exposeFunction('testflow_bridge', (message: any) => {
@@ -271,22 +329,57 @@ export class EngineService {
                     window.dispatchEvent(new CustomEvent('testflow:update', { detail: { index: i, status: 'RUNNING', selector: sel } }));
                 }, { i: i + 1, sel: step.params.selector });
 
-                try {
-                    await this.executeStep(step, i + 1, options.userId);
+                // 1b. Prepare Candidates
+                const candidates: string[] = [];
+                if (step.params.selector) candidates.push(step.params.selector);
+                if (step.params.selectors && Array.isArray(step.params.selectors)) {
+                    step.params.selectors.forEach(s => {
+                        if (s && !candidates.includes(s)) candidates.push(s);
+                    });
+                }
+                const uniqueCandidates = [...new Set(candidates)];
 
-                    // 2. Notify Pass
-                    await this.page.evaluate(({ i }) => {
-                        window.dispatchEvent(new CustomEvent('testflow:update', { detail: { index: i, status: 'PASSED' } }));
-                    }, { i: i + 1 });
+                let stepPassed = false;
+                let lastError = null;
 
-                } catch (originalError: any) {
+                // --- MULTI-SELECTOR LOOP ---
+                for (const candidate of uniqueCandidates) {
+                    try {
+                        // Temp override selector for execution
+                        const originalSelector = step.params.selector;
+                        step.params.selector = candidate;
+
+                        await this.executeStep(step, i + 1, options.userId);
+
+                        // Success
+                        step.params.selector = originalSelector; // Restore or Keep? Maybe keep if we want to "heal" in memory? 
+                        // For Flow Builder, let's just proceed. 
+
+                        if (candidate !== originalSelector) {
+                            console.log(`[Executor] 🩹 Fast-Healed: ${originalSelector} -> ${candidate}`);
+                        }
+
+                        // 2. Notify Pass
+                        await this.page.evaluate(({ i }) => {
+                            window.dispatchEvent(new CustomEvent('testflow:update', { detail: { index: i, status: 'PASSED' } }));
+                        }, { i: i + 1 });
+
+                        stepPassed = true;
+                        break; // Exit loop
+                    } catch (e: any) {
+                        lastError = e;
+                        console.warn(`[Executor] Candidate failed: ${candidate}`);
+                    }
+                }
+
+                if (!stepPassed) {
                     // --- ERROR HANDLING & HOT FIX ---
-                    console.error(`[Executor] Error at step ${i + 1}: ${originalError.message}`);
+                    console.error(`[Executor] Error at step ${i + 1}: ${lastError?.message || 'Unknown'}`);
 
                     // 3. Notify Fail & Wait
                     await this.page.evaluate(({ i, sel, err }) => {
                         window.dispatchEvent(new CustomEvent('testflow:update', { detail: { index: i, status: 'FAILED', selector: sel, error: err } }));
-                    }, { i: i + 1, sel: step.params.selector, err: originalError.message });
+                    }, { i: i + 1, sel: step.params.selector, err: lastError?.message });
 
                     // 4. Pause Node Execution until Browser signals
                     console.log('[Executor] ⏸️ execution paused, waiting for user input...');
@@ -321,25 +414,23 @@ export class EngineService {
             console.error('Fatal Error:', error);
             throw error;
         } finally {
-            // Keep browser open for a moment if desired, or close
-            // await this.browser?.close();
+            // Close Context (Saves Profile Data)
+            await this.browserContext?.close();
         }
     }
 
     private async executeStep(step: TestStep, index: number, userId?: string) {
         if (!this.page) throw new Error("Browser page not initialized");
 
-        // Basic Execution - Removed complex healing for now to focus on Manual Fix
-        // We rely on the "Pause & Fix" workflow now.
         switch (step.action) {
             case 'navigate':
                 await this.page.goto(step.params.url!, { timeout: 15000 });
                 break;
             case 'click':
-                await this.page.click(this.sanitizeSelector(step.params.selector!), { timeout: 5000 }); // Fast fail for interactivity
+                await this.page.click(this.parseSelector(step.params.selector!), { timeout: 5000 });
                 break;
             case 'type':
-                await this.page.fill(this.sanitizeSelector(step.params.selector!), step.params.value || '', { timeout: 5000 });
+                await this.page.fill(this.parseSelector(step.params.selector!), step.params.value || '', { timeout: 5000 });
                 break;
             case 'wait':
                 await this.page.waitForTimeout(parseInt(step.params.value || '1000'));
@@ -347,9 +438,20 @@ export class EngineService {
         }
     }
 
-    private sanitizeSelector(selector: string): string {
+    private parseSelector(selector: string): string {
         if (!selector) return '';
-        let sanitized = selector.replace(/(\.[a-zA-Z0-9_-]+)\[([^=\]]+)\]/g, '$1\\[$2\\]');
+
+        // 1. Explicit Handlers
+        if (selector.startsWith('xpath=') || selector.startsWith('/') || selector.startsWith('(')) {
+            return selector.startsWith('xpath=') ? selector : `xpath=${selector}`;
+        }
+        if (selector.startsWith('id=')) return `#${selector.substring(3)}`;
+
+        let target = selector;
+        if (selector.startsWith('css=')) target = selector.substring(4);
+
+        // 2. CSS Sanitization (Tailwind support)
+        let sanitized = target.replace(/(\.[a-zA-Z0-9_-]+)\[([^=\]]+)\]/g, '$1\\[$2\\]');
         sanitized = sanitized.replace(/!/g, '\\!');
         return sanitized;
     }

@@ -54,14 +54,38 @@ export class RecorderService {
 
             console.log(`[Recorder] Launching browser (Headless: ${headlessParam})...`);
 
-            this.browser = await chromium.launch({
+            // Use persistent profile
+            const userDataDir = 'backend/data/recorder_profile';
+            this.context = await chromium.launchPersistentContext(userDataDir, {
+                channel: 'chrome', // Use system Chrome
                 headless: headlessParam,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-blink-features=AutomationControlled'
+                ],
+                ignoreDefaultArgs: ['--enable-automation'],
+                viewport: null // Allow user to resize window freely
             });
-            this.context = await this.browser.newContext();
-            this.page = await this.context.newPage();
+            // this.browser is not used with persistent context in the same way, 
+            // but we keep the property for compatibility if needed, or ignore it.
+
+            // Handle new pages (popups, new tabs)
+            this.context.on('page', async (newPage) => {
+                console.log('[Recorder] New page detected');
+                this.page = newPage;
+                await this.injectRecorder(newPage);
+            });
+
+            this.page = this.context.pages().length > 0 ? this.context.pages()[0] : await this.context.newPage();
             this.isRecording = true;
             this.recordedSteps = [];
+
+            // Helper to ensure injection happens on the first page too if strict timing requires it
+            await this.injectRecorder(this.page);
+
+            // ... (Rest of startRecording matches original flow) ...
+
 
             // Add initial open command
             const initialStep: RecordedStep = {
@@ -80,12 +104,37 @@ export class RecorderService {
                 timestamp: Date.now()
             });
 
-            // Expose function to browser
-            await this.page.exposeFunction('recordEvent', (event: any) => {
+
+
+
+
+            await this.page.goto(url);
+            console.log('[Recorder] Recording started successfully');
+        } catch (error) {
+            console.error('[Recorder] Error starting recording:', error);
+            throw error;
+        }
+    }
+
+    private async injectRecorder(page: Page) {
+        // 1. Enable Browser Logging to Backend Terminal
+        page.on('console', msg => {
+            const text = msg.text();
+            if (text.includes('[Recorder]')) {
+                console.log(`[Browser] ${text}`);
+            }
+        });
+
+        page.on('pageerror', err => {
+            console.error(`[Browser] ❌ Page Error: ${err.message}`);
+        });
+
+        // 2. Expose function to browser (Handle idempotent injection)
+        try {
+            await page.exposeFunction('recordEvent', (event: any) => {
+                // ... (Keeping exact same handler logic) ...
                 console.log('[Recorder] Received event from browser:', event);
                 if (this.isRecording) {
-
-                    // Add to backend list
                     this.recordedSteps.push({
                         command: event.command,
                         target: event.target,
@@ -93,12 +142,12 @@ export class RecorderService {
                         value: event.value
                     });
 
-                    // Update the In-Browser Studio UI
-                    this.page?.evaluate((step) => {
-                        window.dispatchEvent(new CustomEvent('recorder:update', { detail: step }));
-                    }, { command: event.command, target: event.target, value: event.value }).catch(() => { });
+                    this.context?.pages().forEach(p => {
+                        p.evaluate((step) => {
+                            window.dispatchEvent(new CustomEvent('recorder:update', { detail: step }));
+                        }, { command: event.command, target: event.target, value: event.value }).catch(() => { });
+                    });
 
-                    // Emit 'record:step' to Frontend (Dev Studio)
                     this.io?.emit('record:step', {
                         action: event.command === 'type' ? 'type' : 'click',
                         selector: event.target,
@@ -107,10 +156,22 @@ export class RecorderService {
                     });
                 }
             });
+        } catch (e: any) {
+            if (!e.message.includes('already been registered')) {
+                console.error('[Recorder] Failed to expose function:', e);
+            }
+        }
 
-            await this.page.addInitScript(() => {
-                if (document.getElementById('tf-recorder-host')) return;
+        // 3. Define the Injection Logic as a String/Function
+        const injectionLogic = () => {
+            try {
+                if (document.getElementById('tf-recorder-host')) {
+                    console.log('[Recorder] UI already injected.');
+                    return;
+                }
+                console.log('[Recorder] Injecting UI...');
 
+                // --- 1. Host & Shadow ---
                 // --- 1. Host & Shadow ---
                 const host = document.createElement('div');
                 host.id = 'tf-recorder-host';
@@ -118,7 +179,20 @@ export class RecorderService {
                 host.style.top = '0';
                 host.style.right = '0';
                 host.style.zIndex = '2147483647';
-                document.documentElement.appendChild(host);
+
+                const inject = () => {
+                    if (document.getElementById('tf-recorder-host')) return;
+                    if (document.documentElement) {
+                        document.documentElement.appendChild(host);
+                    } else if (document.body) {
+                        document.body.appendChild(host);
+                    } else {
+                        // Retry on load
+                        window.addEventListener('DOMContentLoaded', () => inject());
+                    }
+                };
+                inject();
+
                 const shadow = host.attachShadow({ mode: 'open' });
 
                 // --- 2. Styles (Studio Panel) ---
@@ -126,11 +200,8 @@ export class RecorderService {
                 style.textContent = `
                     :host { font-family: 'Inter', system-ui, sans-serif; }
                     .studio-panel {
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
                         width: 300px;
-                        height: calc(100vh - 40px);
+                        height: 500px;
                         background: rgba(15, 23, 42, 0.98);
                         border: 1px solid rgba(255,255,255,0.1);
                         border-radius: 12px;
@@ -139,7 +210,12 @@ export class RecorderService {
                         flex-direction: column;
                         color: white;
                         font-size: 13px;
-                        transition: transform 0.3s ease;
+                        transition: height 0.3s ease, width 0.3s ease;
+                        overflow: hidden;
+                    }
+                    .studio-panel.minimized {
+                        height: 48px;
+                        width: 200px;
                     }
                     .header {
                         padding: 12px 16px;
@@ -149,9 +225,16 @@ export class RecorderService {
                         display: flex;
                         align-items: center;
                         gap: 8px;
+                        cursor: grab;
+                        user-select: none;
                     }
+                    .header:active { cursor: grabbing; }
                     .rec-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 1.5s infinite; }
                     
+                    .actions { margin-left: auto; display: flex; gap: 8px; }
+                    .icon-btn { cursor: pointer; opacity: 0.7; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
+                    .icon-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+
                     .script-view {
                         flex: 1;
                         overflow-y: auto;
@@ -168,7 +251,6 @@ export class RecorderService {
                     }
                     .step-cmd { font-weight: 600; color: #93c5fd; margin-bottom: 2px; }
                     .step-val { color: #cbd5e1; font-family: monospace; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
                     .context-bar {
                         padding: 16px;
                         border-top: 1px solid rgba(255,255,255,0.1);
@@ -194,7 +276,6 @@ export class RecorderService {
                     .suggestion-btn:hover { background: #475569; border-color: #64748b; }
                     .suggestion-btn.primary { background: #2563eb; border-color: #3b82f6; }
                     .suggestion-btn.primary:hover { background: #1d4ed8; }
-
                     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
                 `;
                 shadow.appendChild(style);
@@ -203,9 +284,15 @@ export class RecorderService {
                 const panel = document.createElement('div');
                 panel.className = 'studio-panel';
                 panel.innerHTML = `
-                    <div class="header"><div class="rec-dot"></div> RECORDER STUDIO</div>
+                    <div class="header">
+                        <div class="rec-dot"></div> 
+                        <span>RECORDER</span>
+                        <div class="actions">
+                             <div class="icon-btn" id="min-btn">_</div>
+                        </div>
+                    </div>
                     <div class="script-view" id="script-list">
-                        <div style="text-align:center; color:#64748b; margin-top:20px;">Checking page...</div>
+                        <div style="text-align:center; color:#64748b; margin-top:20px;">Recording...</div>
                     </div>
                     <div class="context-bar">
                         <div class="context-title">Smart Actions</div>
@@ -215,6 +302,46 @@ export class RecorderService {
                     </div>
                 `;
                 shadow.appendChild(panel);
+
+                // --- 4. Logic (Drag & Minimize) ---
+                const header = panel.querySelector('.header') as HTMLElement;
+                const minBtn = panel.querySelector('#min-btn') as HTMLElement;
+
+                // Toggle Minimize
+                minBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    panel.classList.toggle('minimized');
+                };
+
+                // Drag Logic
+                let isDragging = false;
+                let startX = 0, startY = 0;
+                let initialLeft = 0, initialTop = 0;
+
+                header.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    const rect = host.getBoundingClientRect();
+                    initialLeft = rect.left;
+                    initialTop = rect.top;
+                    host.style.cursor = 'grabbing';
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    host.style.top = `${initialTop + dy}px`;
+                    host.style.left = `${initialLeft + dx}px`;
+                    host.style.right = 'auto'; // Disable right anchor
+                });
+
+                window.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    host.style.cursor = 'auto';
+                });
 
                 // --- 4. Logic ---
                 // A. Live Script Update
@@ -286,33 +413,68 @@ export class RecorderService {
                     }
                 }, true);
 
-                // Helper to get selectors (Embedded from previous implementation)
+                // Helper to get selectors (Robust)
                 const getSelectors = (el: HTMLElement): string[][] => {
-                    // ... (Keeping the original selector logic abbreviated for brevity, but it MUST be here)
                     const targets: string[][] = [];
-                    if (el.id) targets.push([`id=${el.id}`, 'id']);
-                    if (el.getAttribute('name')) targets.push([`name=${el.getAttribute('name')}`, 'name']);
 
-                    const getXPath = (element: HTMLElement): string => {
-                        if (element.id) return `//*[@id='${element.id}']`;
-                        if (element === document.body) return '/html/body';
-                        let ix = 0; const siblings = element.parentNode?.childNodes;
-                        if (siblings) {
-                            for (let i = 0; i < siblings.length; i++) {
-                                const sibling = siblings[i] as HTMLElement;
-                                if (sibling === element) return getXPath(element.parentNode as HTMLElement) + '/' + element.tagName.toLowerCase() + (ix + 1 > 1 ? '[' + (ix + 1) + ']' : '');
-                                if (sibling.nodeType === 1 && sibling.tagName === element.tagName) ix++;
-                            }
-                        }
-                        return '';
-                    };
-                    const xp = getXPath(el);
-                    if (xp) targets.push([`xpath=${xp}`, 'xpath:position']);
+                    // 1. ID (Best)
+                    if (el.id) {
+                        targets.push([`id=${el.id}`, 'id']);
+                        targets.push([`css=#${el.id}`, 'css:id']);
+                        targets.push([`//*[@id='${el.id}']`, 'xpath:id']);
+                    }
 
+                    // 2. Name
+                    const name = el.getAttribute('name');
+                    if (name) {
+                        targets.push([`name=${name}`, 'name']);
+                        targets.push([`css=[name='${name}']`, 'css:name']);
+                        targets.push([`//*[@name='${name}']`, 'xpath:attributes']);
+                    }
+
+                    // 3. Link Text (Anchors)
+                    if (el.tagName === 'A' && el.textContent?.trim()) {
+                        targets.push([`linkText=${el.textContent.trim()}`, 'linkText']);
+                    }
+
+                    // 4. CSS (Classes)
                     if (el.className && typeof el.className === 'string') {
                         const classes = el.className.split(/\s+/).filter(c => c && !c.includes(':'));
-                        if (classes.length) targets.push([`css=${el.tagName.toLowerCase()}.${classes.join('.')}`, 'css:finder']);
+                        if (classes.length) {
+                            targets.push([`css=.${classes.join('.')}`, 'css:class']);
+                        }
                     }
+
+                    // 5. XPath (Relative/Hierarchy)
+                    try {
+                        const getPath = (element: HTMLElement, relative = false): string => {
+                            if (relative && element.id) return `//*[@id='${element.id}']`;
+                            if (element === document.body) return '/html/body';
+
+                            let ix = 0; const siblings = element.parentNode?.childNodes;
+                            if (siblings) {
+                                for (let i = 0; i < siblings.length; i++) {
+                                    const sibling = siblings[i] as HTMLElement;
+                                    if (sibling === element) return getPath(element.parentNode as HTMLElement, relative) + '/' + element.tagName.toLowerCase() + (ix + 1 > 1 ? '[' + (ix + 1) + ']' : '');
+                                    if (sibling.nodeType === 1 && sibling.tagName === element.tagName) ix++;
+                                }
+                            }
+                            return '';
+                        };
+
+                        // Relative (starts from nearest ID)
+                        const relativeXpath = getPath(el, true);
+                        if (relativeXpath && !relativeXpath.startsWith('/html')) targets.push([`xpath=${relativeXpath}`, 'xpath:relative']);
+
+                        // Absolute
+                        const absXpath = getPath(el, false);
+                        if (absXpath) targets.push([`xpath=${absXpath}`, 'xpath:position']);
+
+                    } catch (err) { console.error('XPath Error', err); }
+
+                    // 6. CSS (Hierarchy - Simple)
+                    // (Optional: add more complex CSS generators if needed)
+
                     return targets;
                 };
 
@@ -320,44 +482,55 @@ export class RecorderService {
                     const target = e.target as HTMLElement;
                     if (['INPUT', 'TEXTAREA'].includes(target.tagName) || target.closest('#tf-recorder-host')) return;
 
-                    // console.log('[Browser] Click detected on:', target);
-                    const targets = getSelectors(target);
-                    // (window as any).recordEvent({ ... }); // Handled locally? No, we need global listener too.
-                    (window as any).recordEvent({
-                        command: 'click',
-                        target: targets.length > 0 ? targets[0][0] : target.tagName.toLowerCase(),
-                        targets: targets,
-                        value: ''
-                    });
+                    console.log('[Recorder:Browser] Click detected on:', target.tagName, target);
+
+                    try {
+                        const targets = getSelectors(target);
+                        if ((window as any).recordEvent) {
+                            console.log('[Recorder:Browser] Sending click event...');
+                            (window as any).recordEvent({
+                                command: 'click',
+                                target: targets.length > 0 ? targets[0][0] : target.tagName.toLowerCase(),
+                                targets: targets,
+                                value: ''
+                            });
+                        } else {
+                            console.error('[Recorder:Browser] ❌ recordEvent function is missing on window!');
+                        }
+                    } catch (err) {
+                        console.error('[Recorder:Browser] Click Handler Error:', err);
+                    }
                 }, true);
 
                 document.addEventListener('change', (e) => {
                     const target = e.target as HTMLInputElement;
-                    if (['INPUT', 'TEXTAREA'].includes(target.tagName) && !target.dataset.ignoreRecord) { // Add flag to ignore self-fills if needed, relying on value check
-                        if (target.value.startsWith('{{')) return; // ignore our variable fills
-                        const targets = getSelectors(target);
-                        (window as any).recordEvent({
-                            command: 'type',
-                            target: targets.length > 0 ? targets[0][0] : target.tagName.toLowerCase(),
-                            targets: targets,
-                            value: target.value
-                        });
+                    if (['INPUT', 'TEXTAREA'].includes(target.tagName) && !target.dataset.ignoreRecord) {
+                        if (target.value.startsWith('{{')) return;
+
+                        console.log('[Recorder:Browser] Change detected on:', target.tagName);
+
+                        if ((window as any).recordEvent) {
+                            (window as any).recordEvent({
+                                command: 'type',
+                                target: target.tagName.toLowerCase(), // Simplified for brevity in log
+                                value: target.value
+                            });
+                        }
                     }
                 }, true);
 
-            }); // End InitScript
+            } catch (err: any) {
+                console.error('[Recorder] Injection Error:', err);
+            }
+        };
 
-            await this.page.goto(url);
-            console.log('[Recorder] Recording started successfully');
-        } catch (error) {
-            console.error('[Recorder] Error starting recording:', error);
-            throw error;
-        }
+        // 4. Inject
+        await page.addInitScript(injectionLogic);
+        await page.evaluate(injectionLogic);
     }
-
     async stopRecording() {
-        if (this.browser) {
-            await this.browser.close();
+        if (this.context) {
+            await this.context.close();
             this.browser = null;
             this.context = null;
             this.page = null;
@@ -500,6 +673,8 @@ export class RecorderService {
 
                 if (step.target.includes('=')) {
                     target = step.target;
+                } else if (step.target.startsWith('/') || step.target.startsWith('(')) {
+                    target = `xpath=${step.target}`;
                 }
 
                 log(`[Recorder] Executing: ${step.command} on ${target}`);

@@ -11,7 +11,7 @@ export interface TestRun {
     triggeredBy: string; // 'manual' or 'schedule'
     files: string[];     // IDs of files run
     results: TestResult[];
-    logs: string[];      // Unified log stream
+    logs: any[];      // Unified log stream (Structured Objects)
 }
 
 export interface TestResult {
@@ -24,7 +24,7 @@ export interface TestResult {
 
 class TestRunService {
     // In-memory buffer for active runs to prevent race conditions during rapid logging
-    private logBuffers: Map<string, string[]> = new Map();
+    private logBuffers: Map<string, any[]> = new Map();
     // Queue for sequential flushing per run
     private flushQueues: Map<string, Promise<void>> = new Map();
 
@@ -83,14 +83,22 @@ class TestRunService {
         });
     }
 
-    async appendLog(runId: string, projectId: string, message: string) {
-        const formattedLog = `[${new Date().toISOString()}] ${message}`;
+    async appendLog(runId: string, projectId: string, logEntry: any) {
+        // Ensure timestamp exists
+        if (typeof logEntry === 'object' && !logEntry.timestamp) {
+            logEntry.timestamp = new Date().toISOString();
+        }
+
+        // Formatted for console/legacy if string
+        const logContent = typeof logEntry === 'string'
+            ? `[${new Date().toISOString()}] ${logEntry}`
+            : logEntry;
 
         // Buffer immediately for live view
         if (!this.logBuffers.has(runId)) {
             this.logBuffers.set(runId, []);
         }
-        this.logBuffers.get(runId)?.push(formattedLog);
+        this.logBuffers.get(runId)?.push(logContent);
 
         // Queue flush
         const previousFlush = this.flushQueues.get(runId) || Promise.resolve();

@@ -78,21 +78,34 @@ export class SchedulerService {
                 // Let's try to fetch suite from Firestore via `projectService` or `SuiteService` (if migrated/available).
 
                 // Assuming `SuiteService` is available:
+                // 1. Fetch Suite Details
                 const { suiteService } = await import('../persistence/SuiteService');
+                let fileIds: string[] = [];
+                let config: any = {};
+
                 const suite = await suiteService.getSuite(schedule.project_id, schedule.suite_id);
 
-                if (!suite) {
-                    console.error(`[Scheduler] Suite ${schedule.suite_id} not found. Skipping.`);
-                    return;
+                if (suite) {
+                    fileIds = suite.fileIds;
+                    config = suite.config || {};
+                } else {
+                    // Fallback: Check if it's a single Script
+                    const scriptData = await localProjectService.findScriptById(schedule.suite_id);
+                    if (scriptData && scriptData.projectId === schedule.project_id) {
+                        console.log(`[Scheduler] 📄 Resolved ID ${schedule.suite_id} as Single Script.`);
+                        fileIds = [schedule.suite_id];
+                        config = { name: schedule.name };
+                    } else {
+                        console.error(`[Scheduler] ❌ Suite/Script ${schedule.suite_id} not found. Skipping.`);
+                        return;
+                    }
                 }
 
                 // 2. Execute Batch
-                // Config from Suite + default
-                const config = suite.config || {};
                 config.triggeredBy = 'schedule';
                 config.scheduleId = schedule.id;
 
-                await batchRunnerService.executeBatch(schedule.project_id, suite.fileIds, config);
+                await batchRunnerService.executeBatch(schedule.project_id, fileIds, config);
                 console.log(`[Scheduler] ✅ Scheduled Run Initiated: ${schedule.name}`);
 
             } catch (e) {
