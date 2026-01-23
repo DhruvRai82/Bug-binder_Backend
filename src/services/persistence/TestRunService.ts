@@ -6,12 +6,21 @@ export interface TestRun {
     id: string;
     projectId: string;
     status: 'running' | 'completed' | 'failed';
+    source: 'manual' | 'scheduler' | 'orchestrator' | 'recorder'; // NEW: Source of Truth
     startTime: string;
     endTime?: string;
-    triggeredBy: string; // 'manual' or 'schedule'
-    files: string[];     // IDs of files run
+    triggeredBy: string;
+    files: string[];
     results: TestResult[];
-    logs: any[];      // Unified log stream (Structured Objects)
+    logs: LogEntry[]; // Strict Typing
+    meta?: any; // Browser info, platform, etc.
+}
+
+export interface LogEntry {
+    timestamp: string;
+    level: 'info' | 'warn' | 'error' | 'debug';
+    message: string;
+    metadata?: any;
 }
 
 export interface TestResult {
@@ -23,20 +32,19 @@ export interface TestResult {
 }
 
 class TestRunService {
-    // In-memory buffer for active runs to prevent race conditions during rapid logging
+    // In-memory buffer for active runs
     private logBuffers: Map<string, any[]> = new Map();
-    // Queue for sequential flushing per run
     private flushQueues: Map<string, Promise<void>> = new Map();
 
-
-    async createRun(projectId: string, fileIds: string[]): Promise<string> {
+    async createRun(projectId: string, fileIds: string[], source: TestRun['source'] = 'manual', triggeredBy = 'user'): Promise<string> {
         const runId = uuidv4();
         const newRun: TestRun = {
             id: runId,
             projectId,
             status: 'running',
+            source,
             startTime: new Date().toISOString(),
-            triggeredBy: 'manual',
+            triggeredBy,
             files: fileIds,
             results: [],
             logs: []
@@ -49,8 +57,9 @@ class TestRunService {
         const data: any = await localProjectService.readProjectData(projectId);
         if (!data.testRuns) data.testRuns = [];
         data.testRuns.unshift(newRun); // Add to top
-        // Keep only last 50 runs to avoid bloat
-        if (data.testRuns.length > 50) data.testRuns = data.testRuns.slice(0, 50);
+
+        // Keep only last 100 runs (increased size)
+        if (data.testRuns.length > 100) data.testRuns = data.testRuns.slice(0, 100);
 
         await localProjectService.writeProjectData(projectId, data);
         return runId;
@@ -59,21 +68,21 @@ class TestRunService {
     async updateRun(runId: string, projectId: string, updates: Partial<TestRun>) {
         // Apply any buffered logs before updating status
         await this.flushLogs(runId, projectId);
-        // Ensure all pending logs are flushed before updating the run's status or other properties
-        await this.flushQueues.get(runId); // Wait for any pending flush operations to complete
+        // Ensure all pending logs are flushed
+        await this.flushQueues.get(runId);
 
         await this._updateRun(projectId, runId, (run) => {
-            Object.assign(run, updates);
+            Object.assign(run, { ...updates, endTime: updates.status === 'completed' || updates.status === 'failed' ? new Date().toISOString() : undefined });
         });
 
-        // If run is completed or failed, clear the buffer and queue
         if (updates.status === 'completed' || updates.status === 'failed') {
             this.logBuffers.delete(runId);
             this.flushQueues.delete(runId);
         }
     }
 
-    // Helper to atomically update run
+    // ... (Helper _updateRun remains same)
+
     private async _updateRun(projectId: string, runId: string, updater: (run: TestRun) => void) {
         await localProjectService.updateProjectData(projectId, (data) => {
             const run = data.testRuns?.find((r: TestRun) => r.id === runId);
@@ -83,24 +92,18 @@ class TestRunService {
         });
     }
 
-    async appendLog(runId: string, projectId: string, logEntry: any) {
-        // Ensure timestamp exists
-        if (typeof logEntry === 'object' && !logEntry.timestamp) {
-            logEntry.timestamp = new Date().toISOString();
-        }
+    async appendLog(runId: string, projectId: string, message: string, level: 'info' | 'warn' | 'error' = 'info') {
+        const entry: LogEntry = {
+            timestamp: new Date().toISOString(),
+            level,
+            message
+        };
 
-        // Formatted for console/legacy if string
-        const logContent = typeof logEntry === 'string'
-            ? `[${new Date().toISOString()}] ${logEntry}`
-            : logEntry;
-
-        // Buffer immediately for live view
         if (!this.logBuffers.has(runId)) {
             this.logBuffers.set(runId, []);
         }
-        this.logBuffers.get(runId)?.push(logContent);
+        this.logBuffers.get(runId)?.push(entry);
 
-        // Queue flush
         const previousFlush = this.flushQueues.get(runId) || Promise.resolve();
         const currentFlush = previousFlush.then(() => this.flushLogs(runId, projectId));
 
@@ -113,24 +116,27 @@ class TestRunService {
         if (!buffer || buffer.length === 0) return;
 
         const logsToWrite = [...buffer];
-        this.logBuffers.set(runId, []); // Clear buffer
+        this.logBuffers.set(runId, []);
 
         try {
             await this._updateRun(projectId, runId, (run) => {
                 if (!run.logs) run.logs = [];
+                // Ensure legacy logs don't break strict typing if they exist, but we append new valid ones
                 run.logs.push(...logsToWrite);
             });
         } catch (error) {
             console.error(`Failed to flush logs for run ${runId}:`, error);
-            // Restore logs to buffer? 
-            // If update failed, they are lost from disk but still in 'logsToWrite'.
-            // For now, logged error is sufficient to debug race conditions.
         }
     }
 
-    async getProjectRuns(projectId: string): Promise<TestRun[]> {
+    async getProjectRuns(projectId: string, filterSource?: string): Promise<TestRun[]> {
         const data = await localProjectService.readProjectData(projectId);
-        return data.testRuns || [];
+        let runs = data.testRuns || [];
+
+        if (filterSource) {
+            runs = runs.filter((r: TestRun) => r.source === filterSource);
+        }
+        return runs;
     }
 
     async getRunDetails(projectId: string, runId: string): Promise<TestRun | null> {

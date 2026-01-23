@@ -143,7 +143,8 @@ router.post('/scan', async (req, res) => {
 router.get('/runs/:projectId', async (req, res) => {
     try {
         const { projectId } = req.params;
-        const runs = await testRunService.getProjectRuns(projectId);
+        const source = req.query.source as string | undefined;
+        const runs = await testRunService.getProjectRuns(projectId, source);
         res.json(runs);
     } catch (error: any) {
         console.error(`[Runner] Error in GET /runs/${req.params.projectId}:`, error);

@@ -1,5 +1,7 @@
 /// <reference lib="dom" />
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Server } from 'socket.io';
 import { ReportService } from '../analysis/ReportService';
 // import { supabase } from '../lib/supabase';
@@ -7,6 +9,7 @@ import { localProjectService } from '../persistence/LocalProjectService';
 import { genAIService } from '../ai/GenAIService';
 import { visualTestService } from '../analysis/VisualTestService';
 import { testDataService } from '../persistence/TestDataService';
+import { testRunService } from '../persistence/TestRunService';
 import { v4 as uuidv4 } from 'uuid';
 
 interface RecordedStep {
@@ -54,18 +57,23 @@ export class RecorderService {
 
             console.log(`[Recorder] Launching browser (Headless: ${headlessParam})...`);
 
-            // Use persistent profile
-            const userDataDir = 'backend/data/recorder_profile';
+            // Use persistent profile - SYNCED WITH ENGINE SERVICE
+            const userDataDir = path.join(process.cwd(), 'data', 'browser_profile');
+            // Check if directory exists, if not create it
+            if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
+
+            console.log(`[Recorder] 🕵️ Launching Stealth Profile at: ${userDataDir}`);
+
             this.context = await chromium.launchPersistentContext(userDataDir, {
-                channel: 'chrome', // Use system Chrome
+                channel: 'chrome',
                 headless: headlessParam,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
-                    '--disable-blink-features=AutomationControlled'
+                    '--disable-blink-features=AutomationControlled' // Stealth Key 
                 ],
-                ignoreDefaultArgs: ['--enable-automation'],
-                viewport: null // Allow user to resize window freely
+                ignoreDefaultArgs: ['--enable-automation', '--use-mock-keychain'],
+                viewport: null
             });
             // this.browser is not used with persistent context in the same way, 
             // but we keep the property for compatibility if needed, or ignore it.
@@ -613,11 +621,7 @@ export class RecorderService {
     }
 
     async playScript(scriptId: string, userId?: string): Promise<{ status: 'pass' | 'fail', logs: string }> {
-        // We need to find the script first.
-        // Since we don't have projectId, we might need to search all projects.
-        // PRO TIP: In local mode, we can iterate all project files.
-        // Let's do a quick "Find Script" here.
-
+        // --- 1. Find Script ---
         const allProjects = await localProjectService.getAllProjects(userId || '');
         let foundScript: any = null;
         let foundProjectId = '';
@@ -634,6 +638,11 @@ export class RecorderService {
 
         if (!foundScript) throw new Error('Script not found or access denied');
 
+        // --- 2. Create Unified Run (Source: Recorder) ---
+        // We use 'recorder' source so HistoryView can filter it out by default
+        const runId = await testRunService.createRun(foundProjectId, [scriptId], 'recorder', 'manual');
+        console.log(`[Recorder] Created Unified Run: ${runId}`);
+
         const script = {
             id: foundScript.id,
             projectId: foundScript.project_id || foundProjectId,
@@ -644,26 +653,36 @@ export class RecorderService {
             userId: foundScript.user_id
         };
 
-        // Default to HEADED (visible) for Recorder Playback unless explicitly set to HEADLESS=true
         const headlessParam = process.env.HEADLESS === 'true';
 
-        const browser = await chromium.launch({
-            headless: headlessParam,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-        const context = await browser.newContext();
-        const page = await context.newPage();
+        // Use consistent Stealth Profile
+        const userDataDir = path.join(process.cwd(), 'data', 'browser_profile');
+        if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
 
-        const startTime = Date.now();
+        const context = await chromium.launchPersistentContext(userDataDir, {
+            channel: 'chrome',
+            headless: headlessParam,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+            ignoreDefaultArgs: ['--enable-automation', '--use-mock-keychain'],
+            viewport: null
+        });
+
+        // this.browser is not used with persistent context in the same way, 
+        // but we keep the property for compatibility if needed, or ignore it.
+        const page = context.pages().length > 0 ? context.pages()[0] : await context.newPage();
+
         const logs: string[] = [];
-        const log = (msg: string) => {
+        // Unified Logger
+        const log = (msg: string, level: 'info' | 'warn' | 'error' = 'info') => {
             console.log(msg);
-            logs.push(msg);
+            logs.push(msg); // Keep for return value
+            testRunService.appendLog(runId, foundProjectId, msg, level);
         };
         let stepsCompleted = 0;
         let scriptWasHealed = false;
 
         try {
+            await testRunService.updateRun(runId, foundProjectId, { status: 'running' });
             for (let i = 0; i < script.steps.length; i++) {
                 const step = script.steps[i];
                 let target = step.target;
@@ -766,52 +785,28 @@ export class RecorderService {
             }
             // -------------------------------
 
-            await browser.close();
+            await context.close();
 
-            // Persist healing if needed
             if (scriptWasHealed && foundProjectId) {
                 await localProjectService.updateScript(foundProjectId, script.id, { steps: script.steps }, userId || '');
                 log('[Recorder] 💾 Script updated with healed selectors.');
             }
 
-            await this.reportService.addReport({
-                scriptId: script.id,
-                projectId: script.projectId,
-                scriptName: script.name,
-                module: script.module,
-                status: 'pass',
-                startTime: new Date(startTime).toISOString(),
-                endTime: new Date().toISOString(),
-                duration: Date.now() - startTime,
-                stepsCompleted,
-                totalSteps: script.steps.length,
-                userId: script.userId,
-                logs: logs.join('\n')
-            });
+            // Finish Unified Run
+            await testRunService.updateRun(runId, foundProjectId, { status: 'completed' });
 
             return { status: 'pass', logs: logs.join('\n') };
 
         } catch (error: any) {
-            log(`[Recorder] Script failed: ${error.message}`);
-            if (browser) await browser.close();
+            log(`[Recorder] Script failed: ${error.message}`, 'error');
+            if (context) await context.close();
 
-            await this.reportService.addReport({
-                scriptId: script.id,
-                projectId: script.projectId,
-                scriptName: script.name,
-                module: script.module,
-                status: 'fail',
-                startTime: new Date(startTime).toISOString(),
-                endTime: new Date().toISOString(),
-                duration: Date.now() - startTime,
-                error: error.message,
-                stepsCompleted,
-                totalSteps: script.steps.length,
-                userId: script.userId,
-                logs: logs.join('\n')
-            });
+            // Fail Unified Run
+            await testRunService.updateRun(runId, foundProjectId, { status: 'failed' });
 
             return { status: 'fail', logs: logs.join('\n') };
+
+
         }
     }
 
@@ -944,6 +939,10 @@ export class RecorderService {
             return code;
         }
     }
+
+    // Deprecated: Reports are now TestRuns.
+    // We redirect to ReportService just for compatibility if anyone calls it, 
+    // but ideally the frontend should now check 'TestRuns' for everything.
     async getReports(projectId?: string, userId?: string) {
         return this.reportService.getReports(projectId, userId);
     }
