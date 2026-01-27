@@ -28,8 +28,9 @@ import { fileSystemRoutes } from './routes/persistence/filesystem';
 import aiAnalyticsRoutes from './routes/ai/analytics';
 import { suitesRouter } from './routes/persistence/suites';
 import performanceRouter from './routes/execution/performance';
-import engineRouter from './routes/execution/engine';
+
 import { runsRouter } from './routes/execution/runs';
+
 
 dotenv.config();
 
@@ -103,8 +104,9 @@ app.use('/api/suites', suitesRouter);
 app.use('/api/suites', suitesRouter);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/performance', performanceRouter);
-app.use('/api/engine', engineRouter);
+
 app.use('/api/runs', runsRouter);
+
 
 
 // Initialize Scheduler
@@ -113,6 +115,10 @@ schedulerService.init().catch(err => console.error("Scheduler Init Failed:", err
 
 // Initialize Recorder Socket
 recorderService.setSocket(io);
+
+// Initialize TestRunner Socket for real-time logs
+import { testRunnerService } from './services/execution/TestRunnerService';
+testRunnerService.setSocketIO(io);
 
 httpServer.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`✅ Test Management Backend running on port ${PORT}`);

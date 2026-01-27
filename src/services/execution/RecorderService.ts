@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { chromium, Browser, BrowserContext, Page } from 'playwright';
+import { chromium, firefox, Browser, BrowserContext, Page } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Server } from 'socket.io';
@@ -179,6 +179,35 @@ export class RecorderService {
                 }
                 console.log('[Recorder] Injecting UI...');
 
+                // Check for draft recovery
+                const checkDraftRecovery = () => {
+                    try {
+                        const draft = localStorage.getItem('recorder_draft');
+                        const timestamp = localStorage.getItem('recorder_draft_timestamp');
+                        if (draft && timestamp) {
+                            const steps = JSON.parse(draft);
+                            if (steps.length > 0) {
+                                const timeAgo = new Date(timestamp).toLocaleString();
+                                const recover = confirm(
+                                    `Found a saved draft with ${steps.length} step(s) from ${timeAgo}.\n\nWould you like to recover it?`
+                                );
+                                if (recover) {
+                                    // Restore steps by dispatching events
+                                    steps.forEach((step: any) => {
+                                        window.dispatchEvent(new CustomEvent('recorder:update', { detail: step }));
+                                    });
+                                    console.log(`[Recorder] Recovered ${steps.length} steps from draft.`);
+                                } else {
+                                    localStorage.removeItem('recorder_draft');
+                                    localStorage.removeItem('recorder_draft_timestamp');
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('[Recorder] Draft recovery failed:', e);
+                    }
+                };
+
                 // --- 1. Host & Shadow ---
                 // --- 1. Host & Shadow ---
                 const host = document.createElement('div');
@@ -192,8 +221,11 @@ export class RecorderService {
                     if (document.getElementById('tf-recorder-host')) return;
                     if (document.documentElement) {
                         document.documentElement.appendChild(host);
+                        // Check for draft after UI is ready
+                        setTimeout(checkDraftRecovery, 500);
                     } else if (document.body) {
                         document.body.appendChild(host);
+                        setTimeout(checkDraftRecovery, 500);
                     } else {
                         // Retry on load
                         window.addEventListener('DOMContentLoaded', () => inject());
@@ -352,16 +384,77 @@ export class RecorderService {
                 });
 
                 // --- 4. Logic ---
-                // A. Live Script Update
+                // A. Live Script Update + Auto-Save + Step Editing
+                const recordedSteps: any[] = [];
+
                 window.addEventListener('recorder:update', (e: any) => {
                     const step = e.detail;
+                    recordedSteps.push(step);
                     const list = shadow.getElementById('script-list');
                     if (list) {
                         const item = document.createElement('div');
                         item.className = 'step-item';
-                        item.innerHTML = `<div class="step-cmd">${step.command.toUpperCase()}</div><div class="step-val">${step.target}</div>`;
+                        item.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.1);';
+
+                        const stepIndex = recordedSteps.length - 1;
+
+                        // Step content
+                        const content = document.createElement('div');
+                        content.style.cssText = 'flex: 1; display: flex; gap: 8px; cursor: pointer;';
+                        content.innerHTML = `<div class="step-cmd">${step.command.toUpperCase()}</div><div class="step-val">${step.target}</div>`;
+
+                        // Edit button
+                        const editBtn = document.createElement('button');
+                        editBtn.textContent = '✏️';
+                        editBtn.style.cssText = 'background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #3b82f6; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px;';
+                        editBtn.onclick = () => {
+                            const newTarget = prompt('Edit selector:', step.target);
+                            const newValue = step.value ? prompt('Edit value:', step.value) : null;
+                            if (newTarget) {
+                                recordedSteps[stepIndex].target = newTarget;
+                                if (newValue !== null) recordedSteps[stepIndex].value = newValue;
+                                content.innerHTML = `<div class="step-cmd">${step.command.toUpperCase()}</div><div class="step-val">${newTarget}</div>`;
+                                localStorage.setItem('recorder_draft', JSON.stringify(recordedSteps));
+                            }
+                        };
+
+                        // Delete button
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = '🗑️';
+                        deleteBtn.style.cssText = 'background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px;';
+                        deleteBtn.onclick = () => {
+                            if (confirm('Delete this step?')) {
+                                recordedSteps.splice(stepIndex, 1);
+                                item.remove();
+                                localStorage.setItem('recorder_draft', JSON.stringify(recordedSteps));
+                            }
+                        };
+
+                        item.appendChild(content);
+                        item.appendChild(editBtn);
+                        item.appendChild(deleteBtn);
                         list.appendChild(item);
                         list.scrollTop = list.scrollHeight;
+
+                        // Auto-Save Draft to localStorage
+                        try {
+                            localStorage.setItem('recorder_draft', JSON.stringify(recordedSteps));
+                            localStorage.setItem('recorder_draft_timestamp', new Date().toISOString());
+
+                            // Visual feedback
+                            const header = shadow.querySelector('.header span') as HTMLElement;
+                            if (header) {
+                                const originalText = header.textContent;
+                                header.textContent = 'RECORDER (Draft Saved)';
+                                header.style.color = '#10b981';
+                                setTimeout(() => {
+                                    header.textContent = originalText;
+                                    header.style.color = '';
+                                }, 1000);
+                            }
+                        } catch (e) {
+                            console.error('[Recorder] Auto-save failed:', e);
+                        }
                     }
                 });
 
@@ -378,7 +471,15 @@ export class RecorderService {
                     const addBtn = (label: string, value: string, mock: string, primary = false) => {
                         const btn = document.createElement('div');
                         btn.className = `suggestion-btn ${primary ? 'primary' : ''}`;
-                        btn.textContent = label;
+
+                        // Enhanced: Show both label and mock preview
+                        btn.innerHTML = `
+                            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%;">
+                                <div style="font-weight: 600; font-size: 11px;">${label}</div>
+                                <div style="font-size: 9px; opacity: 0.7; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">${mock}</div>
+                            </div>
+                        `;
+
                         btn.onclick = (e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -396,6 +497,14 @@ export class RecorderService {
                                 targets: targets,
                                 value: value
                             });
+
+                            // Visual feedback
+                            btn.style.background = '#10b981';
+                            btn.style.borderColor = '#10b981';
+                            setTimeout(() => {
+                                btn.style.background = '';
+                                btn.style.borderColor = '';
+                            }, 500);
                         };
                         grid.appendChild(btn);
                     };
@@ -539,10 +648,13 @@ export class RecorderService {
     async stopRecording() {
         if (this.context) {
             await this.context.close();
-            this.browser = null;
-            this.context = null;
-            this.page = null;
         }
+        if (this.browser) {
+            await this.browser.close();
+            this.browser = null;
+        }
+        this.context = null;
+        this.page = null;
         this.isRecording = false;
         return this.recordedSteps;
     }
@@ -620,7 +732,7 @@ export class RecorderService {
         return await localProjectService.getScripts(projectId, userId || '');
     }
 
-    async playScript(scriptId: string, userId?: string): Promise<{ status: 'pass' | 'fail', logs: string }> {
+    async playScript(scriptId: string, userId?: string, options?: { browser?: 'chromium' | 'firefox' | 'webkit' }): Promise<{ status: 'pass' | 'fail', logs: string }> {
         // --- 1. Find Script ---
         const allProjects = await localProjectService.getAllProjects(userId || '');
         let foundScript: any = null;
@@ -655,16 +767,39 @@ export class RecorderService {
 
         const headlessParam = process.env.HEADLESS === 'true';
 
-        // Use consistent Stealth Profile
-        const userDataDir = path.join(process.cwd(), 'data', 'browser_profile');
-        if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
+        // Browser Selection Logic
+        const browserType = options?.browser || 'chromium';
+        let context: BrowserContext;
 
-        const context = await chromium.launchPersistentContext(userDataDir, {
-            channel: 'chrome',
-            headless: headlessParam,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
-            ignoreDefaultArgs: ['--enable-automation', '--use-mock-keychain'],
-            viewport: null
+        console.log(`[Recorder] Launching ${browserType} Persistent Context...`);
+
+        if (browserType === 'firefox') {
+            // Ephemeral Firefox (No Profile) as requested
+            console.log('[Recorder] Launching Firefox (Ephemeral)...');
+            this.browser = await firefox.launch({
+                headless: headlessParam,
+            });
+            context = await this.browser.newContext({ viewport: null });
+        } else {
+            // Default Chromium
+            const userDataDir = path.join(process.cwd(), 'data', 'browser_profile');
+            if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
+
+            context = await chromium.launchPersistentContext(userDataDir, {
+                channel: 'chrome',
+                headless: headlessParam,
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+                ignoreDefaultArgs: ['--enable-automation', '--use-mock-keychain'],
+                viewport: null
+            });
+        }
+
+        // 🚨 Safety: Detect if user closes the window manually
+        context.on('close', () => {
+            console.log('[Recorder] ⚠️ Browser window closed manually by user.');
+            // We can't easily "cancel" the running loop below unless we check a flag or use an AbortController.
+            // But we can ensure we don't try to use it.
+            // Actually, we'll rely on the loop checking context.pages() or similar, or catching the specific error.
         });
 
         // this.browser is not used with persistent context in the same way, 
@@ -704,11 +839,13 @@ export class RecorderService {
 
                 try {
                     if (step.command === 'open') {
+                        if (!context.pages().length) throw new Error('Browser closed');
                         await page.goto(step.target);
                     } else if (step.command === 'click') {
-                        // Increase timeout slightly mainly for healing detection time, keeping default but handling error
+                        if (!context.pages().length) throw new Error('Browser closed');
                         await page.click(target, { timeout: 5000 });
                     } else if (step.command === 'type') {
+                        if (!context.pages().length) throw new Error('Browser closed');
                         await page.fill(target, step.value, { timeout: 5000 });
                     }
 

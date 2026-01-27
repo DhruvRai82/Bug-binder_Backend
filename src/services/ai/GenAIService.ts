@@ -227,13 +227,16 @@ export class GenAIService {
         - "condition": params: {} (Label: "If/Else") (Output ports: "true", "false")
         - "loop": params: { count: string } (Label: "Loop")
         - "assert_visible": params: { selector: string } (Label: "Assert Visible")
+        - "assert_visible": params: { selector: string } (Label: "Assert Visible")
         - "assert_text": params: { selector: string, value: string } (Label: "Check Text")
+        - "use_data": params: { datasetId: string } (Label: "Use Data") (Use this for CSV/Data iteration)
         
         Layout Rules:
         - Start at x: 100, y: 100
         - Space nodes vertically by 100px (e.g. y: 100, y: 200, y: 300)
         - Generate simple sequential IDs (1, 2, 3...)
         - Connect them sequentially with edges (source: "1", target: "2").
+        - If "dataset", "csv", or "data" is mentioned, START with a "use_data" node (Node 1) before the Loop or Navigation.
 
         JSON Structure Example:
         {

@@ -5,8 +5,17 @@ import { localProjectService } from '../persistence/LocalProjectService';
 import { testRunService } from '../persistence/TestRunService';
 import { genAIService } from '../ai/GenAIService';
 import { visualTestService } from '../analysis/VisualTestService';
+import { Server } from 'socket.io';
 
 export class TestRunnerService {
+    private io?: Server;
+
+    /**
+     * Set Socket.IO instance for real-time log streaming
+     */
+    setSocketIO(io: Server) {
+        this.io = io;
+    }
 
     /**
      * Executes a recorded script by ID and logs everything to keys tables.
@@ -276,68 +285,24 @@ export class TestRunnerService {
 
     private async logStep(projectId: string, runId: string, index: number, action: string, status: 'pass' | 'fail' | 'info' | 'warning', message: string) {
         try {
-            // Using TestRunService.appendLog for buffering and atomic writes
-            // But we need to format it to match the expected Log object structure
-            // Wait, testRunService.appendLog takes a STRING message. 
-            // BUT UI expects an object { step_index, action, ... }
-            // TestRunService stores `logs: string[]`.
-            // LocalProjectService stores `logs: any[]`.
-
-            // CONFLICT: TestRunService was designed for simpler logs?
-            // Let's check TestRunService again.
-            // Interface: logs: string[]
-            // But localProjectService stores FULL objects used by UI.
-
-            // We must update TestRunService to support Object logs.
-
-            // For now, let's bypass TestRunService buffering for the Log Object content, 
-            // OR update TestRunService to handle any[].
-
-            // Quick Fix: Use localProjectService directly for logs to preserve structure,
-            // BUT this risks the corruption/race condition we tried to fix.
-
-            // Better Fix: Update TestRunService to support structured logs.
-
-            // Since I am refactoring, I should assume TestRunService needs update.
-            // But I cannot see TestRunService right now in this context window effectively without re-reading.
-            // I read it in Step 9639.
-            // TestRunService line 86: async appendLog(runId: string, projectId: string, message: string)
-            // It formats it: const formattedLog = `[${new Date().toISOString()}] ${message}`;
-
-            // This is INCOMPATIBLE with the structured logs the Frontend expects!
-            // Frontend: logs.map(log => <div>{log.action}</div>)
-
-            // Strategy: 
-            // 1. Revert to direct usage of localProjectService.addTestLog (it's atomic now).
-            // 2. The slowness is acceptable for correctness.
-            // 3. The main issue was /history not seeing the local file.
-
-            // So for this edit, I will mostly revert the logging part but keep the /history fix in runner.ts
-
-            // Wait, I already submitted the edit for runner.ts (previous tool).
-            // This tool is for TestRunnerService.ts.
-
-            // So I will stick to localProjectService for logs, BUT I will ensure
-            // createRun/updateRun use localProjectService correctly.
-
-            // Actually, TestRunService.createRun sets "status: running".
-            // localProjectService.createTestRun sets "status" and "logs: []".
-
-            // I should use localProjectService consistently for all operations to match the data structure.
-
-            /* Reverting logic to use localProjectService directly, 
-               but ensuring I don't break existing logic. 
-               The only big change needed here is using localProjectService for everything 
-               AND making sure runner.ts reads from localProjectService.
-            */
-
-            await localProjectService.addTestLog(projectId, runId, {
+            const logEntry = {
                 step_index: index,
                 action,
                 status,
                 message,
                 timestamp: new Date().toISOString()
-            });
+            };
+
+            await localProjectService.addTestLog(projectId, runId, logEntry);
+
+            // Emit real-time log via Socket.IO
+            if (this.io) {
+                this.io.emit('test:log', {
+                    runId,
+                    projectId,
+                    ...logEntry
+                });
+            }
 
         } catch (err) {
             console.error('[TestRunner] Failed to log step:', err);
