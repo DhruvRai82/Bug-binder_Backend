@@ -9,6 +9,10 @@ export interface User {
     uid: string;
     email: string;
     role: 'admin' | 'user' | 'viewer';
+    displayName?: string;
+    photoURL?: string;
+    bio?: string;
+    settings?: Record<string, any>;
     createdAt: string;
     updatedAt: string;
 }
@@ -73,7 +77,8 @@ class UserService {
                 email,
                 role: isFirst ? 'admin' : 'user',
                 createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                settings: {}
             };
             data.users.push(user);
             await this.writeUsersFile(data);
@@ -97,6 +102,39 @@ class UserService {
         user.updatedAt = new Date().toISOString();
         await this.writeUsersFile(data);
         return user;
+    }
+
+    async updateProfile(uid: string, updates: Partial<Pick<User, 'displayName' | 'photoURL' | 'bio' | 'settings'>>): Promise<User | null> {
+        const data = await this.readUsersFile();
+        const user = data.users.find(u => u.uid === uid);
+        if (!user) return null;
+
+        // Merge top-level fields
+        if (updates.displayName !== undefined) user.displayName = updates.displayName;
+        if (updates.photoURL !== undefined) user.photoURL = updates.photoURL;
+        if (updates.bio !== undefined) user.bio = updates.bio;
+
+        // Deep merge settings if provided
+        if (updates.settings) {
+            user.settings = { ...user.settings, ...updates.settings };
+        }
+
+        user.updatedAt = new Date().toISOString();
+
+        await this.writeUsersFile(data);
+        return user;
+    }
+
+    async deleteAccount(uid: string): Promise<boolean> {
+        const data = await this.readUsersFile();
+        const initialLength = data.users.length;
+        data.users = data.users.filter(u => u.uid !== uid);
+
+        if (data.users.length < initialLength) {
+            await this.writeUsersFile(data);
+            return true;
+        }
+        return false;
     }
 }
 
