@@ -1,5 +1,6 @@
 // import { supabase } from '../lib/supabase';
 import { localProjectService } from '../persistence/LocalProjectService';
+import { logger } from '../../lib/logger';
 
 export interface ExecutionReport {
     id: string;
@@ -51,9 +52,11 @@ export class ReportService {
 
         try {
             return await localProjectService.addReport(report.projectId, newReport, report.userId || '');
-        } catch (e) {
-            console.error("Failed to add report locally:", e);
-            throw e;
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                logger.error('Failed to add report locally', error, { projectId: report.projectId });
+            }
+            throw error;
         }
     }
 
@@ -88,7 +91,7 @@ export class ReportService {
                 return { status: 'deleted' };
             }
         }
-        console.warn('Report not found for deletion:', id);
+        logger.warn('Report not found for deletion', { reportId: id });
         return { status: 'not_found' };
     }
 }

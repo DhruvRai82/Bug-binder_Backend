@@ -6,12 +6,13 @@ import * as fs from 'fs';
 import OpenAI from 'openai';
 import { settingsService } from '../persistence/SettingsService';
 import { localProjectService } from '../persistence/LocalProjectService';
+import { logger } from '../../lib/logger';
 
 // Load env from backend root
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
 // Helper to write to log file for debugging
-const logErrorToFile = (message: string, error: any) => {
+const logErrorToFile = (message: string, error: unknown) => {
     const logPath = path.join(__dirname, '../../../ai_debug.log');
     const timestamp = new Date().toISOString();
 
@@ -26,8 +27,10 @@ const logErrorToFile = (message: string, error: any) => {
 
     try {
         fs.appendFileSync(logPath, logEntry);
-    } catch (e) {
-        console.error("Failed to write to log file:", e);
+    } catch (writeError: unknown) {
+        if (writeError instanceof Error) {
+            logger.error('Failed to write to AI debug log file', writeError);
+        }
     }
 };
 
@@ -37,8 +40,10 @@ const logResponseToFile = (message: string, content: string) => {
     const logEntry = `\n[${timestamp}] ${message}\nContent Preview: ${content.substring(0, 500)}...\n-------------------\n`;
     try {
         fs.appendFileSync(logPath, logEntry);
-    } catch (e) {
-        console.error("Failed to write to log file:", e);
+    } catch (writeError: unknown) {
+        if (writeError instanceof Error) {
+            logger.error('Failed to write response to AI debug log file', writeError);
+        }
     }
 };
 

@@ -8,6 +8,7 @@ import { ReportService } from '../analysis/ReportService';
 import { localProjectService } from '../persistence/LocalProjectService';
 import { genAIService } from '../ai/GenAIService';
 import { visualTestService } from '../analysis/VisualTestService';
+import { logger } from '../../lib/logger';
 import { testDataService } from '../persistence/TestDataService';
 import { testRunService } from '../persistence/TestRunService';
 import { v4 as uuidv4 } from 'uuid';
@@ -47,7 +48,7 @@ export class RecorderService {
 
     async startRecording(url: string) {
         try {
-            console.log(`[Recorder] Starting recording for ${url}`);
+            logger.info('Starting recording', { url });
             const headlessParam = process.env.HEADLESS !== 'false';
 
             // Only close previous if recording
@@ -55,14 +56,14 @@ export class RecorderService {
                 await this.stopRecording();
             }
 
-            console.log(`[Recorder] Launching browser (Headless: ${headlessParam})...`);
+            logger.debug('Launching browser', { headless: headlessParam });
 
             // Use persistent profile - SYNCED WITH ENGINE SERVICE
             const userDataDir = path.join(process.cwd(), 'data', 'browser_profile');
             // Check if directory exists, if not create it
             if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
 
-            console.log(`[Recorder] 🕵️ Launching Stealth Profile at: ${userDataDir}`);
+            logger.debug('Launching stealth profile', { userDataDir });
 
             this.context = await chromium.launchPersistentContext(userDataDir, {
                 channel: 'chrome',
@@ -80,7 +81,7 @@ export class RecorderService {
 
             // Handle new pages (popups, new tabs)
             this.context.on('page', async (newPage) => {
-                console.log('[Recorder] New page detected');
+                logger.debug('New page detected');
                 this.page = newPage;
                 await this.injectRecorder(newPage);
             });
@@ -105,7 +106,7 @@ export class RecorderService {
             this.recordedSteps.push(initialStep);
 
             // Emit 'record:step' to match frontend listener
-            console.log('[Recorder] Emitting initial step:', initialStep);
+            logger.debug('Emitting initial step', { step: initialStep });
             this.io?.emit('record:step', {
                 action: 'navigate',
                 url: url,
@@ -117,9 +118,11 @@ export class RecorderService {
 
 
             await this.page.goto(url);
-            console.log('[Recorder] Recording started successfully');
-        } catch (error) {
-            console.error('[Recorder] Error starting recording:', error);
+            logger.info('Recording started successfully');
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                logger.error('Error starting recording', error);
+            }
             throw error;
         }
     }
@@ -129,19 +132,21 @@ export class RecorderService {
         page.on('console', msg => {
             const text = msg.text();
             if (text.includes('[Recorder]')) {
-                console.log(`[Browser] ${text}`);
+                logger.debug('Browser console', { message: text });
             }
         });
 
         page.on('pageerror', err => {
-            console.error(`[Browser] ❌ Page Error: ${err.message}`);
+            if (err instanceof Error) {
+                logger.error('Page error', err);
+            }
         });
 
         // 2. Expose function to browser (Handle idempotent injection)
         try {
             await page.exposeFunction('recordEvent', (event: any) => {
                 // ... (Keeping exact same handler logic) ...
-                console.log('[Recorder] Received event from browser:', event);
+                logger.debug('Received event from browser', { event });
                 if (this.isRecording) {
                     this.recordedSteps.push({
                         command: event.command,
@@ -164,9 +169,9 @@ export class RecorderService {
                     });
                 }
             });
-        } catch (e: any) {
-            if (!e.message.includes('already been registered')) {
-                console.error('[Recorder] Failed to expose function:', e);
+        } catch (e: unknown) {
+            if (e instanceof Error && !e.message.includes('already been registered')) {
+                logger.error('Failed to expose function', e);
             }
         }
 
@@ -174,10 +179,10 @@ export class RecorderService {
         const injectionLogic = () => {
             try {
                 if (document.getElementById('tf-recorder-host')) {
-                    console.log('[Recorder] UI already injected.');
+                    logger.debug('UI already injected');
                     return;
                 }
-                console.log('[Recorder] Injecting UI...');
+                logger.debug('Injecting UI');
 
                 // Check for draft recovery
                 const checkDraftRecovery = () => {
@@ -196,15 +201,17 @@ export class RecorderService {
                                     steps.forEach((step: any) => {
                                         window.dispatchEvent(new CustomEvent('recorder:update', { detail: step }));
                                     });
-                                    console.log(`[Recorder] Recovered ${steps.length} steps from draft.`);
+                                    logger.info('Recovered steps from draft', { stepCount: steps.length });
                                 } else {
                                     localStorage.removeItem('recorder_draft');
                                     localStorage.removeItem('recorder_draft_timestamp');
                                 }
                             }
                         }
-                    } catch (e) {
-                        console.error('[Recorder] Draft recovery failed:', e);
+                    } catch (error: unknown) {
+                        if (error instanceof Error) {
+                            logger.error('Draft recovery failed', error);
+                        }
                     }
                 };
 
@@ -452,8 +459,10 @@ export class RecorderService {
                                     header.style.color = '';
                                 }, 1000);
                             }
-                        } catch (e) {
-                            console.error('[Recorder] Auto-save failed:', e);
+                        } catch (error: unknown) {
+                            if (error instanceof Error) {
+                                logger.error('Auto-save failed', error);
+                            }
                         }
                     }
                 });
@@ -587,7 +596,11 @@ export class RecorderService {
                         const absXpath = getPath(el, false);
                         if (absXpath) targets.push([`xpath=${absXpath}`, 'xpath:position']);
 
-                    } catch (err) { console.error('XPath Error', err); }
+                    } catch (error: unknown) {
+                        if (error instanceof Error) {
+                            logger.error('XPath error', error);
+                        }
+                    }
 
                     // 6. CSS (Hierarchy - Simple)
                     // (Optional: add more complex CSS generators if needed)
@@ -713,7 +726,7 @@ export class RecorderService {
         // Or just let it fail/warn for now. 
         // Wait, playScript calls this. playScript has script data.
 
-        console.warn('updateScriptSteps: Requires Project ID for Local Storage. Skipping persistence for now.');
+        logger.warn('updateScriptSteps requires Project ID for local storage, skipping persistence');
     }
 
     async deleteScript(scriptId: string, projectId: string) {
@@ -722,7 +735,7 @@ export class RecorderService {
         // Delete from Local Project Service
         // We use a dummy userId for now as local service trusts projectId access in this mode
         await localProjectService.deleteScript(projectId, scriptId, 'user-id');
-        console.log(`[Recorder] Deleted script ${scriptId} from project ${projectId}`);
+        logger.info('Deleted script', { scriptId, projectId });
         return { status: 'deleted' };
     }
 
@@ -753,7 +766,7 @@ export class RecorderService {
         // --- 2. Create Unified Run (Source: Recorder) ---
         // We use 'recorder' source so HistoryView can filter it out by default
         const runId = await testRunService.createRun(foundProjectId, [scriptId], 'recorder', 'manual');
-        console.log(`[Recorder] Created Unified Run: ${runId}`);
+        logger.info('Created unified run', { runId });
 
         const script = {
             id: foundScript.id,
@@ -771,11 +784,11 @@ export class RecorderService {
         const browserType = options?.browser || 'chromium';
         let context: BrowserContext;
 
-        console.log(`[Recorder] Launching ${browserType} Persistent Context...`);
+        logger.debug('Launching browser persistent context', { browserType });
 
         if (browserType === 'firefox') {
             // Ephemeral Firefox (No Profile) as requested
-            console.log('[Recorder] Launching Firefox (Ephemeral)...');
+            logger.debug('Launching Firefox (ephemeral)');
             this.browser = await firefox.launch({
                 headless: headlessParam,
             });
@@ -796,7 +809,7 @@ export class RecorderService {
 
         // 🚨 Safety: Detect if user closes the window manually
         context.on('close', () => {
-            console.log('[Recorder] ⚠️ Browser window closed manually by user.');
+            logger.warn('Browser window closed manually by user');
             // We can't easily "cancel" the running loop below unless we check a flag or use an AbortController.
             // But we can ensure we don't try to use it.
             // Actually, we'll rely on the loop checking context.pages() or similar, or catching the specific error.
@@ -809,7 +822,7 @@ export class RecorderService {
         const logs: string[] = [];
         // Unified Logger
         const log = (msg: string, level: 'info' | 'warn' | 'error' = 'info') => {
-            console.log(msg);
+            logger.debug('Browser message', { message: msg });
             logs.push(msg); // Keep for return value
             testRunService.appendLog(runId, foundProjectId, msg, level);
         };

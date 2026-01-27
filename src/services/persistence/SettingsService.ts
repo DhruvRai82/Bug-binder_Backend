@@ -1,6 +1,7 @@
 // import { supabase } from '../lib/supabase';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { logger } from '../../lib/logger';
 
 export interface UserAIKey {
     id: string;
@@ -27,9 +28,12 @@ export const settingsService = {
         try {
             const data = await fs.readFile(SETTINGS_FILE, 'utf-8');
             return JSON.parse(data);
-        } catch (error: any) {
-            if (error.code === 'ENOENT') {
+        } catch (error: unknown) {
+            if (error instanceof Error && 'code' in error && (error as any).code === 'ENOENT') {
                 return { aiKeys: [] };
+            }
+            if (error instanceof Error) {
+                logger.error('Failed to read settings file', error);
             }
             throw error;
         }

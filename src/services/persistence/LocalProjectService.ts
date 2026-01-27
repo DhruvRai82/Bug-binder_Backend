@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 import { Dirent } from 'fs';
 import * as path from 'path';
 import * as ExcelJS from 'exceljs';
+import { logger } from '../../lib/logger';
 
 export interface Project {
     id: string;
@@ -79,8 +80,8 @@ export class LocalProjectService {
         try {
             const data = await fs.readFile(this.projectsFile, 'utf-8');
             return JSON.parse(data);
-        } catch (error) {
-            if ((error as any).code === 'ENOENT') {
+        } catch (error: unknown) {
+            if (error instanceof Error && 'code' in error && (error as any).code === 'ENOENT') {
                 return { projects: [] };
             }
             throw error;
@@ -157,12 +158,14 @@ export class LocalProjectService {
                     return this.getEmptyProjectData();
                 }
                 return JSON.parse(data);
-            } catch (error) {
-                if ((error as any).code === 'ENOENT') {
+            } catch (error: unknown) {
+                if (error instanceof Error && 'code' in error && (error as any).code === 'ENOENT') {
                     return this.getEmptyProjectData();
                 }
                 // Log and return empty if JSON corrupted to prevent 500
-                console.error(`[LocalProject] Corrupt JSON for ${projectId}:`, error);
+                if (error instanceof Error) {
+                    logger.error('Corrupt JSON for project', error, { projectId });
+                }
                 return this.getEmptyProjectData();
             }
         });
@@ -186,8 +189,10 @@ export class LocalProjectService {
             try {
                 await fs.writeFile(tempPath, JSON.stringify(data, null, 2));
                 await fs.rename(tempPath, filePath);
-            } catch (error) {
-                console.error(`[LocalProject] Atomic Write Failed for ${projectId}`, error);
+            } catch (error: unknown) {
+                if (error instanceof Error) {
+                    logger.error('Atomic write failed for project', error, { projectId });
+                }
                 // Try to clean up temp
                 try { await fs.unlink(tempPath); } catch { }
                 throw error;
@@ -203,8 +208,8 @@ export class LocalProjectService {
             try {
                 const content = await fs.readFile(filePath, 'utf-8');
                 data = JSON.parse(content);
-            } catch (error) {
-                if ((error as any).code === 'ENOENT') {
+            } catch (error: unknown) {
+                if (error instanceof Error && 'code' in error && (error as any).code === 'ENOENT') {
                     data = this.getEmptyProjectData();
                 } else {
                     throw error;
@@ -221,8 +226,10 @@ export class LocalProjectService {
             try {
                 await fs.writeFile(tempPath, JSON.stringify(data, null, 2));
                 await fs.rename(tempPath, filePath);
-            } catch (error) {
-                console.error(`[LocalProject] Atomic Update Failed for ${projectId}`, error);
+            } catch (error: unknown) {
+                if (error instanceof Error) {
+                    logger.error('Atomic update failed for project', error, { projectId });
+                }
                 try { await fs.unlink(tempPath); } catch { }
                 throw error;
             }
@@ -317,8 +324,10 @@ export class LocalProjectService {
         // Also delete data file
         try {
             await fs.unlink(this.getProjectDataFilePath(id));
-        } catch (e) {
-            console.error('Error deleting project data file:', e);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                logger.error('Error deleting project data file', error, { projectId: id });
+            }
         }
     }
 
@@ -863,11 +872,17 @@ export class LocalProjectService {
             let entries: Dirent[];
             try {
                 entries = await fs.readdir(dir, { withFileTypes: true });
-            } catch (e) {
+            } catch (error: unknown) {
                 if (parentId === null) {
+                    if (error instanceof Error) {
+                        console.error(`[LocalProject] Error reading root tests directory ${dir}: ${error.message}`);
+                    }
                     await fs.mkdir(dir, { recursive: true });
                     entries = [];
                 } else {
+                    if (error instanceof Error) {
+                        console.error(`[LocalProject] Error reading directory ${dir}: ${error.message}`);
+                    }
                     return;
                 }
             }

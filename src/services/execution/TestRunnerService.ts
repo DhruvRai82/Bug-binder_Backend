@@ -6,6 +6,7 @@ import { testRunService } from '../persistence/TestRunService';
 import { genAIService } from '../ai/GenAIService';
 import { visualTestService } from '../analysis/VisualTestService';
 import { Server } from 'socket.io';
+import { logger } from '../../lib/logger';
 
 export class TestRunnerService {
     private io?: Server;
@@ -49,7 +50,7 @@ export class TestRunnerService {
             });
 
             // 3. Launch Browser
-            console.log(`[TestRunner] Starting Run ${runId} for Script ${script.name}`);
+            logger.info('Starting test run', { runId, scriptName: script.name });
 
             // Force Headed mode for Manual runs (User expectation)
             const isHeaded = triggerSource === 'manual' || process.env.HEADLESS === 'false';
@@ -98,8 +99,8 @@ export class TestRunnerService {
                         await this.logStep(projectId, runId, i + 1, step.command, 'pass', `Step ${i + 1} passed`);
                         stepsCompleted++;
                         continue;
-                    } catch (e) {
-                        lastError = e;
+                    } catch (error: unknown) {
+                        lastError = error;
                         // Fall through to AI healing (usually wait/open don't hit healing but just in case)
                     }
                 } else {
@@ -114,7 +115,7 @@ export class TestRunnerService {
                             await this.logStep(projectId, runId, i + 1, step.command, 'pass', `Step ${i + 1} passed` + (candidate !== step.target ? ' (via backup selector)' : ''));
 
                             if (candidate !== step.target) {
-                                console.log(`[TestRunner] 🩹 Fast-Healed: ${step.target} -> ${candidate}`);
+                                logger.info('Fast-healed selector', { original: step.target, healed: candidate });
                                 script.steps[i].target = candidate;
                                 scriptWasHealed = true;
                             }
@@ -134,7 +135,7 @@ export class TestRunnerService {
                     // Only if all candidates failed
                     const errorMessage = lastError?.message || '';
                     if ((errorMessage.includes('Timeout') || errorMessage.includes('waiting for selector')) && step.command !== 'open') {
-                        console.log(`[TestRunner] 🩹 All selectors failed. Attempting AI Self-Healing...`);
+                        logger.info('Attempting AI self-healing for failed selectors');
                         await this.logStep(projectId, runId, i + 1, 'heal', 'warning', `All selectors failed. Asking AI...`);
 
                         try {
@@ -142,14 +143,14 @@ export class TestRunnerService {
                             const healedSelector = await genAIService.healSelector(htmlSnapshot, step.target, errorMessage);
 
                             if (healedSelector) {
-                                console.log(`[TestRunner] ✨ AI found a potential new selector: ${healedSelector}`);
+                                logger.info('AI found new selector', { healedSelector });
                                 await this.logStep(projectId, runId, i + 1, 'heal', 'info', `AI suggested: ${healedSelector}`);
 
                                 // Retry with new selector
                                 await this.executeStep(page!, step.command, healedSelector, step.value);
 
                                 // Update script object in memory if successful
-                                console.log(`[TestRunner] ✅ Retry successful! Updating script...`);
+                                logger.info('Retry successful, updating script');
                                 script.steps[i].target = healedSelector;
                                 scriptWasHealed = true;
 
@@ -160,12 +161,16 @@ export class TestRunnerService {
                                 await this.logStep(projectId, runId, i + 1, 'heal', 'fail', `AI could not find a fix.`);
                             }
                         } catch (healError) {
-                            console.error('[TestRunner] Healing failed:', healError);
+                            if (healError instanceof Error) {
+                                logger.error('Healing failed', healError);
+                            }
                         }
                     }
                     // ---------------------------
 
-                    console.error(`[TestRunner] Step ${i + 1} failed:`, lastError?.message);
+                    if (lastError instanceof Error) {
+                        logger.error('Step failed', lastError, { stepNumber: i + 1 });
+                    }
                     await this.logStep(projectId, runId, i + 1, step.command, 'fail', `Failed: ${lastError?.message}`);
                     throw lastError;
                 }
@@ -186,7 +191,9 @@ export class TestRunnerService {
                         await this.logStep(projectId, runId, 998, 'visual', 'pass', 'Visual Check Passed.');
                     }
                 } catch (e: any) {
-                    console.error('[TestRunner] Visual Test Error', e);
+                    if (e instanceof Error) {
+                        logger.error('Visual test error', e);
+                    }
                     await this.logStep(projectId, runId, 998, 'visual', 'fail', `Visual Test Error: ${e.message}`);
                 }
             }
@@ -213,7 +220,9 @@ export class TestRunnerService {
             return { status: 'passed', runId, duration };
 
         } catch (error: any) {
-            console.error('[TestRunner] Run Failed:', error);
+            if (error instanceof Error) {
+                logger.error('Test run failed', error, { runId });
+            }
 
             if (runId) {
                 const duration = Date.now() - startTime;
@@ -231,11 +240,11 @@ export class TestRunnerService {
 
                 // 2. Trigger AI Analysis (Additive)
                 try {
-                    console.log(`[AI-LOG] ⚠️ Run Failed. Triggering AI Analysis for Run: ${runId}`);
+                    logger.info('Triggering AI analysis for failed run', { runId });
                     const analysis = await genAIService.analyzeRunFailure(runId, userId, projectId);
 
                     if (analysis) {
-                        console.log(`[AI-LOG] 💡 AI Analysis Summary: ${analysis.failureReason}`);
+                        logger.info('AI analysis complete', { failureReason: analysis.failureReason });
                         await testRunService.updateRun(runId, projectId, {
                             // @ts-ignore
                             ai_analysis: analysis
@@ -243,14 +252,16 @@ export class TestRunnerService {
                         await this.logStep(projectId, runId, 1001, 'ai_analysis', 'info', `AI Analysis: ${analysis.failureReason}`);
                     }
                 } catch (aiError) {
-                    console.error('[AI-LOG] ❌ AI Analysis failed:', aiError);
+                    if (aiError instanceof Error) {
+                        logger.error('AI analysis failed', aiError);
+                    }
                 }
             }
 
             return { status: 'failed', error: error.message, runId };
         } finally {
             if (browser) {
-                console.log(`[TestRunner] Closing browser for Run: ${runId}`);
+                logger.debug('Closing browser', { runId });
                 await browser.close();
             }
         }
@@ -304,8 +315,10 @@ export class TestRunnerService {
                 });
             }
 
-        } catch (err) {
-            console.error('[TestRunner] Failed to log step:', err);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                logger.error('Failed to log step', error);
+            }
         }
     }
 

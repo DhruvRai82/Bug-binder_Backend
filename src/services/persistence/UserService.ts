@@ -1,6 +1,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { logger } from '../../lib/logger';
 
 const DATA_DIR = path.join(__dirname, '../../../data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -12,7 +13,7 @@ export interface User {
     displayName?: string;
     photoURL?: string;
     bio?: string;
-    settings?: Record<string, any>;
+    settings?: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
 }
@@ -32,28 +33,33 @@ class UserService {
 
     private async readUsersFile(): Promise<UsersData> {
         await this.ensureDataDir();
-        console.log(`[UserService] Reading from: ${USERS_FILE}`);
+        logger.debug('Reading users file', { filePath: USERS_FILE });
         try {
             const data = await fs.readFile(USERS_FILE, 'utf-8');
             return JSON.parse(data);
-        } catch (error) {
-            console.warn(`[UserService] Read Failed or File Missing: ${error}`);
-            if ((error as any).code === 'ENOENT') {
+        } catch (error: unknown) {
+            if (error instanceof Error && 'code' in error && (error as any).code === 'ENOENT') {
+                logger.debug('Users file not found, returning empty', { filePath: USERS_FILE });
                 return { users: [] };
+            }
+            if (error instanceof Error) {
+                logger.error('Failed to read users file', error, { filePath: USERS_FILE });
             }
             throw error;
         }
     }
 
     private async writeUsersFile(data: UsersData): Promise<void> {
-        console.log(`[UserService] Writing to: ${USERS_FILE} | Users Count: ${data.users.length}`);
+        logger.debug('Writing users file', { filePath: USERS_FILE, userCount: data.users.length });
         await this.ensureDataDir();
         try {
             await fs.writeFile(USERS_FILE, JSON.stringify(data, null, 2));
-            console.log(`[UserService] Write Successful.`);
-        } catch (err) {
-            console.error(`[UserService] Write Failed:`, err);
-            throw err;
+            logger.debug('Users file write successful');
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                logger.error('Failed to write users file', error, { filePath: USERS_FILE });
+            }
+            throw error;
         }
     }
 
@@ -82,7 +88,7 @@ class UserService {
             };
             data.users.push(user);
             await this.writeUsersFile(data);
-            console.log(`[UserService] Created new user: ${email} (${user.role})`);
+            logger.info('Created new user', { email, role: user.role });
         } else if (user.email !== email) {
             // Update email if changed (optional)
             user.email = email;
